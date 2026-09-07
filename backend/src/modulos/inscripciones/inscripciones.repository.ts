@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class InscripcionesRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
+
+  // =====================================
+  // OBTENER TODAS
+  // =====================================
 
   async obtenerTodas() {
     const resultado =
@@ -44,11 +50,17 @@ export class InscripcionesRepository {
     return resultado.recordset;
   }
 
-  async buscarPorId(id: number) {
+  // =====================================
+  // BUSCAR POR ID
+  // =====================================
+
+  async buscarPorId(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           es.id,
           es.estudiante_id,
           es.seccion_id,
@@ -74,14 +86,23 @@ export class InscripcionesRepository {
           ON s.id = es.seccion_id
 
         WHERE es.id = @id
+
+        LIMIT 1
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR ESTUDIANTE
+  // =====================================
 
   async buscarEstudiantePorId(
     estudiante_id: number,
@@ -89,22 +110,33 @@ export class InscripcionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo_estudiante,
           nombres,
           apellidos,
           activo
+
         FROM estudiantes
+
         WHERE id = @estudiante_id
+
+        LIMIT 1
         `,
         {
           estudiante_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR SECCION
+  // =====================================
 
   async buscarSeccionPorId(
     seccion_id: number,
@@ -112,22 +144,33 @@ export class InscripcionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           nombre,
           grado,
           anio_academico,
           activo
+
         FROM secciones
+
         WHERE id = @seccion_id
+
+        LIMIT 1
         `,
         {
           seccion_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR RELACION
+  // =====================================
 
   async buscarRelacion(
     estudiante_id: number,
@@ -136,15 +179,19 @@ export class InscripcionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           estudiante_id,
           seccion_id,
           fecha_inscripcion,
           activo
+
         FROM estudiantes_secciones
+
         WHERE estudiante_id = @estudiante_id
           AND seccion_id = @seccion_id
+
+        LIMIT 1
         `,
         {
           estudiante_id,
@@ -152,8 +199,15 @@ export class InscripcionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // INSCRIPCION ACTIVA POR AÑO
+  // =====================================
 
   async buscarInscripcionActivaPorAnio(
     estudiante_id: number,
@@ -162,7 +216,7 @@ export class InscripcionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           es.id,
           es.estudiante_id,
           es.seccion_id,
@@ -179,7 +233,9 @@ export class InscripcionesRepository {
 
         WHERE es.estudiante_id = @estudiante_id
           AND s.anio_academico = @anio_academico
-          AND es.activo = 1
+          AND es.activo = TRUE
+
+        LIMIT 1
         `,
         {
           estudiante_id,
@@ -187,8 +243,15 @@ export class InscripcionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // OBTENER POR SECCION
+  // =====================================
 
   async obtenerPorSeccion(
     seccion_id: number,
@@ -225,6 +288,10 @@ export class InscripcionesRepository {
 
     return resultado.recordset;
   }
+
+  // =====================================
+  // OBTENER POR ESTUDIANTE
+  // =====================================
 
   async obtenerPorEstudiante(
     estudiante_id: number,
@@ -263,6 +330,10 @@ export class InscripcionesRepository {
     return resultado.recordset;
   }
 
+  // =====================================
+  // CREAR
+  // =====================================
+
   async crear(
     estudiante_id: number,
     seccion_id: number,
@@ -274,16 +345,18 @@ export class InscripcionesRepository {
           estudiante_id,
           seccion_id
         )
-        OUTPUT
-          INSERTED.id,
-          INSERTED.estudiante_id,
-          INSERTED.seccion_id,
-          INSERTED.fecha_inscripcion,
-          INSERTED.activo
+
         VALUES (
           @estudiante_id,
           @seccion_id
         )
+
+        RETURNING
+          id,
+          estudiante_id,
+          seccion_id,
+          fecha_inscripcion,
+          activo
         `,
         {
           estudiante_id,
@@ -291,8 +364,15 @@ export class InscripcionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
 
   async cambiarEstado(
     id: number,
@@ -302,14 +382,17 @@ export class InscripcionesRepository {
       await this.baseDatosService.ejecutarConsulta(
         `
         UPDATE estudiantes_secciones
+
         SET activo = @activo
-        OUTPUT
-          INSERTED.id,
-          INSERTED.estudiante_id,
-          INSERTED.seccion_id,
-          INSERTED.fecha_inscripcion,
-          INSERTED.activo
+
         WHERE id = @id
+
+        RETURNING
+          id,
+          estudiante_id,
+          seccion_id,
+          fecha_inscripcion,
+          activo
         `,
         {
           id,
@@ -317,6 +400,9 @@ export class InscripcionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }
