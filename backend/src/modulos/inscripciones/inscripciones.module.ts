@@ -1,10 +1,28 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+} from '@nestjs/common';
 
-import { InscripcionesController } from './inscripciones.controller';
-import { InscripcionesService } from './inscripciones.service';
-import { InscripcionesRepository } from './inscripciones.repository';
+import {
+  InscripcionesController,
+} from './inscripciones.controller';
+
+import {
+  InscripcionesService,
+} from './inscripciones.service';
+
+import {
+  InscripcionesRepository,
+} from './inscripciones.repository';
+
+import {
+  AsignacionesModule,
+} from '../asignaciones/asignaciones.module';
 
 @Module({
+  imports: [
+    AsignacionesModule,
+  ],
+
   controllers: [
     InscripcionesController,
   ],

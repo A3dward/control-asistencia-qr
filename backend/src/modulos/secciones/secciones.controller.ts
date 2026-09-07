@@ -9,20 +9,35 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { SeccionesService } from './secciones.service';
-import { CrearSeccionDto } from './dto/crear-seccion.dto';
-import { ActualizarSeccionDto } from './dto/actualizar-seccion.dto';
+import {
+  SeccionesService,
+} from './secciones.service';
 
-import { AutenticacionGuard } from '../autenticacion/guards/autenticacion.guard';
-import { RolesGuard } from '../autenticacion/guards/roles.guard';
-import { Roles } from '../autenticacion/decorators/roles.decorator';
+import {
+  CrearSeccionDto,
+} from './dto/crear-seccion.dto';
+
+import {
+  ActualizarSeccionDto,
+} from './dto/actualizar-seccion.dto';
+
+import {
+  AutenticacionGuard,
+} from '../autenticacion/guards/autenticacion.guard';
+
+import {
+  RolesGuard,
+} from '../autenticacion/guards/roles.guard';
+
+import {
+  Roles,
+} from '../autenticacion/decorators/roles.decorator';
 
 @Controller('secciones')
 @UseGuards(
   AutenticacionGuard,
   RolesGuard,
 )
-@Roles('ADMIN')
 export class SeccionesController {
   constructor(
     private readonly seccionesService:
@@ -30,6 +45,10 @@ export class SeccionesController {
   ) {}
 
   @Get()
+  @Roles(
+    'ADMIN',
+    'DOCENTE',
+  )
   async obtenerTodas() {
     const secciones =
       await this.seccionesService.obtenerTodas();
@@ -37,17 +56,21 @@ export class SeccionesController {
     return {
       mensaje:
         'Secciones obtenidas correctamente',
+
       total:
         secciones.length,
+
       datos:
         secciones,
     };
   }
 
   @Post()
+  @Roles('ADMIN')
   async crear(
     @Body()
-    datos: CrearSeccionDto,
+    datos:
+      CrearSeccionDto,
   ) {
     const seccion =
       await this.seccionesService.crear(
@@ -57,12 +80,17 @@ export class SeccionesController {
     return {
       mensaje:
         'Seccion registrada correctamente',
+
       datos:
         seccion,
     };
   }
 
   @Get(':id')
+  @Roles(
+    'ADMIN',
+    'DOCENTE',
+  )
   async obtenerPorId(
     @Param(
       'id',
@@ -78,12 +106,14 @@ export class SeccionesController {
     return {
       mensaje:
         'Seccion obtenida correctamente',
+
       datos:
         seccion,
     };
   }
 
   @Patch(':id')
+  @Roles('ADMIN')
   async actualizar(
     @Param(
       'id',
@@ -92,7 +122,8 @@ export class SeccionesController {
     id: number,
 
     @Body()
-    datos: ActualizarSeccionDto,
+    datos:
+      ActualizarSeccionDto,
   ) {
     const seccion =
       await this.seccionesService.actualizar(
@@ -103,12 +134,14 @@ export class SeccionesController {
     return {
       mensaje:
         'Seccion actualizada correctamente',
+
       datos:
         seccion,
     };
   }
 
   @Patch(':id/desactivar')
+  @Roles('ADMIN')
   async desactivar(
     @Param(
       'id',
@@ -125,12 +158,14 @@ export class SeccionesController {
     return {
       mensaje:
         'Seccion desactivada correctamente',
+
       datos:
         seccion,
     };
   }
 
   @Patch(':id/activar')
+  @Roles('ADMIN')
   async activar(
     @Param(
       'id',
@@ -147,6 +182,7 @@ export class SeccionesController {
     return {
       mensaje:
         'Seccion activada correctamente',
+
       datos:
         seccion,
     };

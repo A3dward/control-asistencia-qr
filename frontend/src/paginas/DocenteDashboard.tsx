@@ -2,6 +2,7 @@ import {
   BookOutlined,
   LogoutOutlined,
   QrcodeOutlined,
+  UserAddOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -41,7 +42,8 @@ export default function DocenteDashboard() {
     navigate(
       '/login',
       {
-        replace: true,
+        replace:
+          true,
       },
     );
   };
@@ -53,7 +55,8 @@ export default function DocenteDashboard() {
           <Title
             level={2}
             style={{
-              marginBottom: 4,
+              marginBottom:
+                4,
             }}
           >
             Panel del Docente
@@ -74,7 +77,9 @@ export default function DocenteDashboard() {
           icon={
             <LogoutOutlined />
           }
-          onClick={salir}
+          onClick={
+            salir
+          }
         >
           Cerrar sesion
         </Button>
@@ -88,43 +93,123 @@ export default function DocenteDashboard() {
       >
         <Col
           xs={24}
-          md={12}
+          md={8}
         >
           <Card>
             <BookOutlined className="dashboard-icono" />
 
-            <Title level={4}>
+            <Title
+              level={4}
+            >
               Mis clases
             </Title>
 
             <Text
               type="secondary"
             >
-              Consultar los cursos
-              y secciones que tiene
-              asignados.
+              Consulte sus clases
+              y asigne cursos y
+              secciones.
             </Text>
+
+            <div
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <Button
+                type="primary"
+                block
+                onClick={() =>
+                  navigate(
+                    '/docente/piloto',
+                  )
+                }
+              >
+                Gestionar clases
+              </Button>
+            </div>
           </Card>
         </Col>
 
         <Col
           xs={24}
-          md={12}
+          md={8}
+        >
+          <Card>
+            <UserAddOutlined className="dashboard-icono" />
+
+            <Title
+              level={4}
+            >
+              Estudiantes
+            </Title>
+
+            <Text
+              type="secondary"
+            >
+              Registre estudiantes
+              en las secciones que
+              tiene asignadas.
+            </Text>
+
+            <div
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <Button
+                type="primary"
+                block
+                onClick={() =>
+                  navigate(
+                    '/docente/piloto',
+                  )
+                }
+              >
+                Registrar estudiante
+              </Button>
+            </div>
+          </Card>
+        </Col>
+
+        <Col
+          xs={24}
+          md={8}
         >
           <Card>
             <QrcodeOutlined className="dashboard-icono" />
 
-            <Title level={4}>
+            <Title
+              level={4}
+            >
               Tomar asistencia
             </Title>
 
             <Text
               type="secondary"
             >
-              Iniciar una clase y
-              registrar estudiantes
-              mediante codigo QR.
+              El siguiente paso
+              sera utilizar la
+              camara para escanear
+              los QR.
             </Text>
+
+            <div
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <Button
+                block
+                disabled
+              >
+                Proxima etapa
+              </Button>
+            </div>
           </Card>
         </Col>
       </Row>

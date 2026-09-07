@@ -7,20 +7,29 @@ import {
 import RutaProtegida from './componentes/RutaProtegida';
 
 import Login from './paginas/Login';
+
 import AdminDashboard from './paginas/AdminDashboard';
+
 import DocenteDashboard from './paginas/DocenteDashboard';
 
 import Estudiantes from './paginas/Estudiantes';
+
 import Docentes from './paginas/Docentes';
+
 import Secciones from './paginas/Secciones';
+
 import Cursos from './paginas/Cursos';
+
 import Inscripciones from './paginas/Inscripciones';
+
 import Asignaciones from './paginas/Asignaciones';
 
 function App() {
   return (
     <Routes>
+      {/* ================================= */}
       {/* LOGIN */}
+      {/* ================================= */}
 
       <Route
         path="/login"
@@ -29,7 +38,9 @@ function App() {
         }
       />
 
-      {/* ADMIN */}
+      {/* ================================= */}
+      {/* ADMINISTRADOR */}
+      {/* ================================= */}
 
       <Route
         element={
@@ -90,7 +101,9 @@ function App() {
         />
       </Route>
 
+      {/* ================================= */}
       {/* DOCENTE */}
+      {/* ================================= */}
 
       <Route
         element={
@@ -109,7 +122,9 @@ function App() {
         />
       </Route>
 
-      {/* INICIO */}
+      {/* ================================= */}
+      {/* PAGINA PRINCIPAL */}
+      {/* ================================= */}
 
       <Route
         path="/"
@@ -121,7 +136,9 @@ function App() {
         }
       />
 
-      {/* CUALQUIER OTRA */}
+      {/* ================================= */}
+      {/* RUTA NO ENCONTRADA */}
+      {/* ================================= */}
 
       <Route
         path="*"

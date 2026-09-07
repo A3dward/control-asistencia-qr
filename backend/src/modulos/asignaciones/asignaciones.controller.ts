@@ -10,12 +10,29 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { AsignacionesService } from './asignaciones.service';
-import { CrearAsignacionDto } from './dto/crear-asignacion.dto';
+import {
+  AsignacionesService,
+} from './asignaciones.service';
 
-import { AutenticacionGuard } from '../autenticacion/guards/autenticacion.guard';
-import { RolesGuard } from '../autenticacion/guards/roles.guard';
-import { Roles } from '../autenticacion/decorators/roles.decorator';
+import {
+  CrearAsignacionDto,
+} from './dto/crear-asignacion.dto';
+
+import {
+  AutoasignarClaseDto,
+} from './dto/autoasignar-clase.dto';
+
+import {
+  AutenticacionGuard,
+} from '../autenticacion/guards/autenticacion.guard';
+
+import {
+  RolesGuard,
+} from '../autenticacion/guards/roles.guard';
+
+import {
+  Roles,
+} from '../autenticacion/decorators/roles.decorator';
 
 import {
   UsuarioAutenticado,
@@ -33,7 +50,7 @@ export class AsignacionesController {
   ) {}
 
   // =====================================
-  // MIS ASIGNACIONES - DOCENTE
+  // DOCENTE - MIS ASIGNACIONES
   // =====================================
 
   @Get('mis-asignaciones')
@@ -65,10 +82,56 @@ export class AsignacionesController {
     return {
       mensaje:
         'Mis asignaciones obtenidas correctamente',
+
       total:
         activas.length,
+
       datos:
         activas,
+    };
+  }
+
+  // =====================================
+  // DOCENTE - AUTOASIGNARSE CLASE
+  // =====================================
+
+  @Post('autoasignar')
+  @Roles('DOCENTE')
+  async autoasignar(
+    @Req()
+    request: {
+      usuario: UsuarioAutenticado;
+    },
+
+    @Body()
+    datos:
+      AutoasignarClaseDto,
+  ) {
+    const docenteId =
+      Number(
+        request.usuario.docente_id,
+      );
+
+    const asignacion =
+      await this.asignacionesService.crear(
+        {
+          docente_id:
+            docenteId,
+
+          curso_id:
+            datos.curso_id,
+
+          seccion_id:
+            datos.seccion_id,
+        },
+      );
+
+    return {
+      mensaje:
+        'Clase asignada correctamente',
+
+      datos:
+        asignacion,
     };
   }
 
@@ -85,8 +148,10 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignaciones docentes obtenidas correctamente',
+
       total:
         asignaciones.length,
+
       datos:
         asignaciones,
     };
@@ -100,7 +165,8 @@ export class AsignacionesController {
   @Roles('ADMIN')
   async crear(
     @Body()
-    datos: CrearAsignacionDto,
+    datos:
+      CrearAsignacionDto,
   ) {
     const asignacion =
       await this.asignacionesService.crear(
@@ -110,6 +176,7 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignacion docente registrada correctamente',
+
       datos:
         asignacion,
     };
@@ -136,8 +203,10 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignaciones del docente obtenidas correctamente',
+
       total:
         asignaciones.length,
+
       datos:
         asignaciones,
     };
@@ -164,8 +233,10 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignaciones de la seccion obtenidas correctamente',
+
       total:
         asignaciones.length,
+
       datos:
         asignaciones,
     };
@@ -192,6 +263,7 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignacion docente obtenida correctamente',
+
       datos:
         asignacion,
     };
@@ -219,6 +291,7 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignacion docente desactivada correctamente',
+
       datos:
         asignacion,
     };
@@ -246,6 +319,7 @@ export class AsignacionesController {
     return {
       mensaje:
         'Asignacion docente activada correctamente',
+
       datos:
         asignacion,
     };
