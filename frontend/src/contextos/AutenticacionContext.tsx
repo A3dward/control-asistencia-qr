@@ -1,9 +1,12 @@
 import {
   createContext,
-  ReactNode,
   useContext,
   useEffect,
   useState,
+} from 'react';
+
+import type {
+  ReactNode,
 } from 'react';
 
 import api from '../servicios/api';
