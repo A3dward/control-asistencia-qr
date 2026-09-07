@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class AsignacionesRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
+
+  // =====================================
+  // OBTENER TODAS
+  // =====================================
 
   async obtenerTodas() {
     const resultado =
@@ -55,11 +61,17 @@ export class AsignacionesRepository {
     return resultado.recordset;
   }
 
-  async buscarPorId(id: number) {
+  // =====================================
+  // BUSCAR POR ID
+  // =====================================
+
+  async buscarPorId(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           ad.id,
           ad.docente_id,
           ad.curso_id,
@@ -98,14 +110,23 @@ export class AsignacionesRepository {
           ON s.id = ad.seccion_id
 
         WHERE ad.id = @id
+
+        LIMIT 1
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR DOCENTE
+  // =====================================
 
   async buscarDocentePorId(
     docente_id: number,
@@ -113,7 +134,7 @@ export class AsignacionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           d.id,
           d.codigo_docente,
           d.activo,
@@ -128,14 +149,23 @@ export class AsignacionesRepository {
           ON u.id = d.usuario_id
 
         WHERE d.id = @docente_id
+
+        LIMIT 1
         `,
         {
           docente_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR CURSO
+  // =====================================
 
   async buscarCursoPorId(
     curso_id: number,
@@ -143,21 +173,32 @@ export class AsignacionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo,
           nombre,
           activo
+
         FROM cursos
+
         WHERE id = @curso_id
+
+        LIMIT 1
         `,
         {
           curso_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR SECCION
+  // =====================================
 
   async buscarSeccionPorId(
     seccion_id: number,
@@ -165,22 +206,33 @@ export class AsignacionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           nombre,
           grado,
           anio_academico,
           activo
+
         FROM secciones
+
         WHERE id = @seccion_id
+
+        LIMIT 1
         `,
         {
           seccion_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR ASIGNACION EXISTENTE
+  // =====================================
 
   async buscarAsignacion(
     docente_id: number,
@@ -190,17 +242,21 @@ export class AsignacionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           docente_id,
           curso_id,
           seccion_id,
           activo,
           fecha_creacion
+
         FROM asignaciones_docentes
+
         WHERE docente_id = @docente_id
           AND curso_id = @curso_id
           AND seccion_id = @seccion_id
+
+        LIMIT 1
         `,
         {
           docente_id,
@@ -209,8 +265,15 @@ export class AsignacionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // OBTENER POR DOCENTE
+  // =====================================
 
   async obtenerPorDocente(
     docente_id: number,
@@ -254,6 +317,10 @@ export class AsignacionesRepository {
 
     return resultado.recordset;
   }
+
+  // =====================================
+  // OBTENER POR SECCION
+  // =====================================
 
   async obtenerPorSeccion(
     seccion_id: number,
@@ -299,6 +366,10 @@ export class AsignacionesRepository {
     return resultado.recordset;
   }
 
+  // =====================================
+  // CREAR
+  // =====================================
+
   async crear(
     docente_id: number,
     curso_id: number,
@@ -312,18 +383,20 @@ export class AsignacionesRepository {
           curso_id,
           seccion_id
         )
-        OUTPUT
-          INSERTED.id,
-          INSERTED.docente_id,
-          INSERTED.curso_id,
-          INSERTED.seccion_id,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
+
         VALUES (
           @docente_id,
           @curso_id,
           @seccion_id
         )
+
+        RETURNING
+          id,
+          docente_id,
+          curso_id,
+          seccion_id,
+          activo,
+          fecha_creacion
         `,
         {
           docente_id,
@@ -332,8 +405,15 @@ export class AsignacionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
 
   async cambiarEstado(
     id: number,
@@ -343,15 +423,18 @@ export class AsignacionesRepository {
       await this.baseDatosService.ejecutarConsulta(
         `
         UPDATE asignaciones_docentes
+
         SET activo = @activo
-        OUTPUT
-          INSERTED.id,
-          INSERTED.docente_id,
-          INSERTED.curso_id,
-          INSERTED.seccion_id,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
+
         WHERE id = @id
+
+        RETURNING
+          id,
+          docente_id,
+          curso_id,
+          seccion_id,
+          activo,
+          fecha_creacion
         `,
         {
           id,
@@ -359,6 +442,9 @@ export class AsignacionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }
