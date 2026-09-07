@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class SesionesClaseRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
 
   // =====================================
@@ -67,11 +69,13 @@ export class SesionesClaseRepository {
   // BUSCAR POR ID
   // =====================================
 
-  async buscarPorId(id: number) {
+  async buscarPorId(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           sc.id,
           sc.asignacion_docente_id,
           sc.fecha_sesion,
@@ -113,13 +117,18 @@ export class SesionesClaseRepository {
           ON s.id = ad.seccion_id
 
         WHERE sc.id = @id
+
+        LIMIT 1
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -132,7 +141,7 @@ export class SesionesClaseRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           ad.id,
           ad.docente_id,
           ad.curso_id,
@@ -167,13 +176,18 @@ export class SesionesClaseRepository {
           ON s.id = ad.seccion_id
 
         WHERE ad.id = @asignacion_docente_id
+
+        LIMIT 1
         `,
         {
           asignacion_docente_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -186,7 +200,7 @@ export class SesionesClaseRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           asignacion_docente_id,
           fecha_sesion,
@@ -202,17 +216,22 @@ export class SesionesClaseRepository {
           AND estado = 'ABIERTA'
 
         ORDER BY id DESC
+
+        LIMIT 1
         `,
         {
           asignacion_docente_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
-  // CREAR
+  // CREAR SESION
   // =====================================
 
   async crear(
@@ -228,28 +247,31 @@ export class SesionesClaseRepository {
           estado
         )
 
-        OUTPUT
-          INSERTED.id,
-          INSERTED.asignacion_docente_id,
-          INSERTED.fecha_sesion,
-          INSERTED.hora_inicio,
-          INSERTED.hora_fin,
-          INSERTED.estado,
-          INSERTED.fecha_creacion
-
         VALUES (
           @asignacion_docente_id,
-          CAST(GETDATE() AS DATE),
-          CAST(GETDATE() AS TIME),
+          CURRENT_DATE,
+          CURRENT_TIMESTAMP,
           'ABIERTA'
         )
+
+        RETURNING
+          id,
+          asignacion_docente_id,
+          fecha_sesion,
+          hora_inicio,
+          hora_fin,
+          estado,
+          fecha_creacion
         `,
         {
           asignacion_docente_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -293,20 +315,18 @@ export class SesionesClaseRepository {
   // Y REGISTRAR AUSENTES
   // =====================================
 
-  async cerrar(id: number) {
-    const resultado =
-      await this.baseDatosService.ejecutarConsulta(
-        `
-        BEGIN TRY
+  async cerrar(
+    id: number,
+  ) {
+    return this.baseDatosService.ejecutarTransaccion(
+      async (cliente) => {
 
-          BEGIN TRANSACTION;
+        // =================================
+        // REGISTRAR AUSENTES
+        // =================================
 
-          /*
-            Registrar como AUSENTE a todos los
-            estudiantes activos de la seccion
-            que no hayan sido registrados.
-          */
-
+        await this.baseDatosService.ejecutarConsulta(
+          `
           INSERT INTO asistencias (
             sesion_clase_id,
             estudiante_id,
@@ -336,9 +356,9 @@ export class SesionesClaseRepository {
 
           WHERE sc.id = @id
 
-            AND es.activo = 1
+            AND es.activo = TRUE
 
-            AND e.activo = 1
+            AND e.activo = TRUE
 
             AND NOT EXISTS (
               SELECT 1
@@ -347,60 +367,59 @@ export class SesionesClaseRepository {
                 a.sesion_clase_id = sc.id
                 AND
                 a.estudiante_id = e.id
-            );
-
-          /*
-            Cerrar la sesion.
-          */
-
-          UPDATE sesiones_clase
-
-          SET
-            estado = 'CERRADA',
-            hora_fin =
-              CAST(GETDATE() AS TIME)
-
-          WHERE id = @id;
-
-          COMMIT TRANSACTION;
-
-          SELECT
+            )
+          `,
+          {
             id,
-            asignacion_docente_id,
-            fecha_sesion,
-            hora_inicio,
-            hora_fin,
-            estado,
-            fecha_creacion
+          },
+          cliente,
+        );
 
-          FROM sesiones_clase
+        // =================================
+        // CERRAR SESION
+        // =================================
 
-          WHERE id = @id;
+        const resultado =
+          await this.baseDatosService.ejecutarConsulta(
+            `
+            UPDATE sesiones_clase
 
-        END TRY
+            SET
+              estado = 'CERRADA',
+              hora_fin = CURRENT_TIMESTAMP
 
-        BEGIN CATCH
+            WHERE id = @id
 
-          IF @@TRANCOUNT > 0
-            ROLLBACK TRANSACTION;
+            RETURNING
+              id,
+              asignacion_docente_id,
+              fecha_sesion,
+              hora_inicio,
+              hora_fin,
+              estado,
+              fecha_creacion
+            `,
+            {
+              id,
+            },
+            cliente,
+          );
 
-          THROW;
-
-        END CATCH
-        `,
-        {
-          id,
-        },
-      );
-
-    return resultado.recordset[0] ?? null;
+        return (
+          resultado.recordset[0] ??
+          null
+        );
+      },
+    );
   }
 
   // =====================================
-  // CANCELAR
+  // CANCELAR SESION
   // =====================================
 
-  async cancelar(id: number) {
+  async cancelar(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
@@ -408,25 +427,27 @@ export class SesionesClaseRepository {
 
         SET
           estado = 'CANCELADA',
-          hora_fin =
-            CAST(GETDATE() AS TIME)
-
-        OUTPUT
-          INSERTED.id,
-          INSERTED.asignacion_docente_id,
-          INSERTED.fecha_sesion,
-          INSERTED.hora_inicio,
-          INSERTED.hora_fin,
-          INSERTED.estado,
-          INSERTED.fecha_creacion
+          hora_fin = CURRENT_TIMESTAMP
 
         WHERE id = @id
+
+        RETURNING
+          id,
+          asignacion_docente_id,
+          fecha_sesion,
+          hora_inicio,
+          hora_fin,
+          estado,
+          fecha_creacion
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }
