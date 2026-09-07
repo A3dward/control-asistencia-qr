@@ -12,6 +12,10 @@ import AdminDashboard from './paginas/AdminDashboard';
 
 import DocenteDashboard from './paginas/DocenteDashboard';
 
+import MisClases from './paginas/MisClases';
+
+import EstudiantesDocente from './paginas/EstudiantesDocente';
+
 import Estudiantes from './paginas/Estudiantes';
 
 import Docentes from './paginas/Docentes';
@@ -27,9 +31,7 @@ import Asignaciones from './paginas/Asignaciones';
 function App() {
   return (
     <Routes>
-      {/* ================================= */}
       {/* LOGIN */}
-      {/* ================================= */}
 
       <Route
         path="/login"
@@ -38,9 +40,7 @@ function App() {
         }
       />
 
-      {/* ================================= */}
-      {/* ADMINISTRADOR */}
-      {/* ================================= */}
+      {/* ADMIN */}
 
       <Route
         element={
@@ -101,9 +101,7 @@ function App() {
         />
       </Route>
 
-      {/* ================================= */}
       {/* DOCENTE */}
-      {/* ================================= */}
 
       <Route
         element={
@@ -120,11 +118,23 @@ function App() {
             <DocenteDashboard />
           }
         />
+
+        <Route
+          path="/docente/clases"
+          element={
+            <MisClases />
+          }
+        />
+
+        <Route
+          path="/docente/estudiantes"
+          element={
+            <EstudiantesDocente />
+          }
+        />
       </Route>
 
-      {/* ================================= */}
-      {/* PAGINA PRINCIPAL */}
-      {/* ================================= */}
+      {/* INICIO */}
 
       <Route
         path="/"
@@ -136,9 +146,7 @@ function App() {
         }
       />
 
-      {/* ================================= */}
       {/* RUTA NO ENCONTRADA */}
-      {/* ================================= */}
 
       <Route
         path="*"

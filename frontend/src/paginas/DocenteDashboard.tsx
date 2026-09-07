@@ -123,7 +123,7 @@ export default function DocenteDashboard() {
                 block
                 onClick={() =>
                   navigate(
-                    '/docente/piloto',
+                    '/docente/clases',
                   )
                 }
               >
@@ -165,7 +165,7 @@ export default function DocenteDashboard() {
                 block
                 onClick={() =>
                   navigate(
-                    '/docente/piloto',
+                    '/docente/estudiantes',
                   )
                 }
               >
@@ -191,10 +191,9 @@ export default function DocenteDashboard() {
             <Text
               type="secondary"
             >
-              El siguiente paso
-              sera utilizar la
-              camara para escanear
-              los QR.
+              Escanee los QR de
+              los estudiantes con
+              la camara.
             </Text>
 
             <div
