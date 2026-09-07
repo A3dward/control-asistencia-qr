@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class SeccionesRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
+
+  // =====================================
+  // OBTENER TODAS
+  // =====================================
 
   async obtenerTodas() {
     const resultado =
@@ -27,11 +33,17 @@ export class SeccionesRepository {
     return resultado.recordset;
   }
 
-  async buscarPorId(id: number) {
+  // =====================================
+  // BUSCAR POR ID
+  // =====================================
+
+  async buscarPorId(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           nombre,
           grado,
@@ -40,14 +52,22 @@ export class SeccionesRepository {
           fecha_creacion
         FROM secciones
         WHERE id = @id
+        LIMIT 1
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // BUSCAR POR DATOS
+  // =====================================
 
   async buscarPorDatos(
     nombre: string,
@@ -57,7 +77,7 @@ export class SeccionesRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           nombre,
           grado,
@@ -67,6 +87,7 @@ export class SeccionesRepository {
         WHERE nombre = @nombre
           AND grado = @grado
           AND anio_academico = @anio_academico
+        LIMIT 1
         `,
         {
           nombre,
@@ -75,8 +96,15 @@ export class SeccionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // CREAR
+  // =====================================
 
   async crear(
     nombre: string,
@@ -91,18 +119,18 @@ export class SeccionesRepository {
           grado,
           anio_academico
         )
-        OUTPUT
-          INSERTED.id,
-          INSERTED.nombre,
-          INSERTED.grado,
-          INSERTED.anio_academico,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         VALUES (
           @nombre,
           @grado,
           @anio_academico
         )
+        RETURNING
+          id,
+          nombre,
+          grado,
+          anio_academico,
+          activo,
+          fecha_creacion
         `,
         {
           nombre,
@@ -111,8 +139,15 @@ export class SeccionesRepository {
         },
       );
 
-    return resultado.recordset[0];
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTUALIZAR
+  // =====================================
 
   async actualizar(
     id: number,
@@ -128,14 +163,14 @@ export class SeccionesRepository {
           nombre = @nombre,
           grado = @grado,
           anio_academico = @anio_academico
-        OUTPUT
-          INSERTED.id,
-          INSERTED.nombre,
-          INSERTED.grado,
-          INSERTED.anio_academico,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         WHERE id = @id
+        RETURNING
+          id,
+          nombre,
+          grado,
+          anio_academico,
+          activo,
+          fecha_creacion
         `,
         {
           id,
@@ -145,8 +180,15 @@ export class SeccionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
 
   async cambiarEstado(
     id: number,
@@ -157,14 +199,14 @@ export class SeccionesRepository {
         `
         UPDATE secciones
         SET activo = @activo
-        OUTPUT
-          INSERTED.id,
-          INSERTED.nombre,
-          INSERTED.grado,
-          INSERTED.anio_academico,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         WHERE id = @id
+        RETURNING
+          id,
+          nombre,
+          grado,
+          anio_academico,
+          activo,
+          fecha_creacion
         `,
         {
           id,
@@ -172,6 +214,9 @@ export class SeccionesRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }

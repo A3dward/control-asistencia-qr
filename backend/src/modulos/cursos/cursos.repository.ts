@@ -1,11 +1,17 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class CursosRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
+
+  // =====================================
+  // OBTENER TODOS
+  // =====================================
 
   async obtenerTodos() {
     const resultado =
@@ -23,11 +29,17 @@ export class CursosRepository {
     return resultado.recordset;
   }
 
-  async buscarPorId(id: number) {
+  // =====================================
+  // BUSCAR POR ID
+  // =====================================
+
+  async buscarPorId(
+    id: number,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo,
           nombre,
@@ -35,34 +47,52 @@ export class CursosRepository {
           fecha_creacion
         FROM cursos
         WHERE id = @id
+        LIMIT 1
         `,
         {
           id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
-  async buscarPorCodigo(codigo: string) {
+  // =====================================
+  // BUSCAR POR CODIGO
+  // =====================================
+
+  async buscarPorCodigo(
+    codigo: string,
+  ) {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo,
           nombre,
           activo
         FROM cursos
         WHERE codigo = @codigo
+        LIMIT 1
         `,
         {
           codigo,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // CREAR
+  // =====================================
 
   async crear(
     codigo: string,
@@ -75,16 +105,16 @@ export class CursosRepository {
           codigo,
           nombre
         )
-        OUTPUT
-          INSERTED.id,
-          INSERTED.codigo,
-          INSERTED.nombre,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         VALUES (
           @codigo,
           @nombre
         )
+        RETURNING
+          id,
+          codigo,
+          nombre,
+          activo,
+          fecha_creacion
         `,
         {
           codigo,
@@ -92,8 +122,15 @@ export class CursosRepository {
         },
       );
 
-    return resultado.recordset[0];
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTUALIZAR
+  // =====================================
 
   async actualizar(
     id: number,
@@ -107,13 +144,13 @@ export class CursosRepository {
         SET
           codigo = @codigo,
           nombre = @nombre
-        OUTPUT
-          INSERTED.id,
-          INSERTED.codigo,
-          INSERTED.nombre,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         WHERE id = @id
+        RETURNING
+          id,
+          codigo,
+          nombre,
+          activo,
+          fecha_creacion
         `,
         {
           id,
@@ -122,8 +159,15 @@ export class CursosRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
+
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
 
   async cambiarEstado(
     id: number,
@@ -134,13 +178,13 @@ export class CursosRepository {
         `
         UPDATE cursos
         SET activo = @activo
-        OUTPUT
-          INSERTED.id,
-          INSERTED.codigo,
-          INSERTED.nombre,
-          INSERTED.activo,
-          INSERTED.fecha_creacion
         WHERE id = @id
+        RETURNING
+          id,
+          codigo,
+          nombre,
+          activo,
+          fecha_creacion
         `,
         {
           id,
@@ -148,6 +192,9 @@ export class CursosRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }
