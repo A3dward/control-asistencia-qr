@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+
 import { BaseDatosService } from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class AsistenciasRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
 
   // =====================================
@@ -17,7 +19,7 @@ export class AsistenciasRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           sc.id,
           sc.asignacion_docente_id,
           sc.fecha_sesion,
@@ -47,13 +49,18 @@ export class AsistenciasRepository {
           ON s.id = ad.seccion_id
 
         WHERE sc.id = @sesion_clase_id
+
+        LIMIT 1
         `,
         {
           sesion_clase_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -66,7 +73,7 @@ export class AsistenciasRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo_estudiante,
           nombres,
@@ -77,17 +84,22 @@ export class AsistenciasRepository {
         FROM estudiantes
 
         WHERE token_qr = @token_qr
+
+        LIMIT 1
         `,
         {
           token_qr,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
-  // VERIFICAR INSCRIPCION
+  // VERIFICAR INSCRIPCION ACTIVA
   // =====================================
 
   async buscarInscripcionActiva(
@@ -97,7 +109,7 @@ export class AsistenciasRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           es.id,
           es.estudiante_id,
           es.seccion_id,
@@ -106,9 +118,15 @@ export class AsistenciasRepository {
 
         FROM estudiantes_secciones es
 
-        WHERE es.estudiante_id = @estudiante_id
-          AND es.seccion_id = @seccion_id
-          AND es.activo = 1
+        WHERE es.estudiante_id =
+          @estudiante_id
+
+          AND es.seccion_id =
+          @seccion_id
+
+          AND es.activo = TRUE
+
+        LIMIT 1
         `,
         {
           estudiante_id,
@@ -116,7 +134,10 @@ export class AsistenciasRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -130,7 +151,7 @@ export class AsistenciasRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           sesion_clase_id,
           estudiante_id,
@@ -140,8 +161,13 @@ export class AsistenciasRepository {
 
         FROM asistencias
 
-        WHERE sesion_clase_id = @sesion_clase_id
-          AND estudiante_id = @estudiante_id
+        WHERE sesion_clase_id =
+          @sesion_clase_id
+
+          AND estudiante_id =
+          @estudiante_id
+
+        LIMIT 1
         `,
         {
           sesion_clase_id,
@@ -149,7 +175,10 @@ export class AsistenciasRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -170,20 +199,20 @@ export class AsistenciasRepository {
           estado
         )
 
-        OUTPUT
-          INSERTED.id,
-          INSERTED.sesion_clase_id,
-          INSERTED.estudiante_id,
-          INSERTED.fecha_hora_asistencia,
-          INSERTED.estado,
-          INSERTED.fecha_creacion
-
         VALUES (
           @sesion_clase_id,
           @estudiante_id,
-          SYSDATETIME(),
+          CURRENT_TIMESTAMP,
           'PRESENTE'
         )
+
+        RETURNING
+          id,
+          sesion_clase_id,
+          estudiante_id,
+          fecha_hora_asistencia,
+          estado,
+          fecha_creacion
         `,
         {
           sesion_clase_id,
@@ -191,7 +220,10 @@ export class AsistenciasRepository {
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 
   // =====================================
@@ -236,7 +268,7 @@ export class AsistenciasRepository {
   }
 
   // =====================================
-  // ASISTENCIAS DE ESTUDIANTE
+  // HISTORIAL DEL ESTUDIANTE
   // =====================================
 
   async obtenerPorEstudiante(
@@ -265,16 +297,20 @@ export class AsistenciasRepository {
         FROM asistencias a
 
         INNER JOIN sesiones_clase sc
-          ON sc.id = a.sesion_clase_id
+          ON sc.id =
+            a.sesion_clase_id
 
         INNER JOIN asignaciones_docentes ad
-          ON ad.id = sc.asignacion_docente_id
+          ON ad.id =
+            sc.asignacion_docente_id
 
         INNER JOIN cursos c
-          ON c.id = ad.curso_id
+          ON c.id =
+            ad.curso_id
 
         INNER JOIN secciones s
-          ON s.id = ad.seccion_id
+          ON s.id =
+            ad.seccion_id
 
         WHERE a.estudiante_id =
           @estudiante_id
@@ -302,39 +338,51 @@ export class AsistenciasRepository {
       await this.baseDatosService.ejecutarConsulta(
         `
         SELECT
-          COUNT(*) AS total_registros,
+          COUNT(*)::int AS total_registros,
 
-          SUM(
-            CASE
-              WHEN estado = 'PRESENTE'
-              THEN 1
-              ELSE 0
-            END
-          ) AS presentes,
+          COALESCE(
+            SUM(
+              CASE
+                WHEN estado = 'PRESENTE'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS presentes,
 
-          SUM(
-            CASE
-              WHEN estado = 'AUSENTE'
-              THEN 1
-              ELSE 0
-            END
-          ) AS ausentes,
+          COALESCE(
+            SUM(
+              CASE
+                WHEN estado = 'AUSENTE'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS ausentes,
 
-          SUM(
-            CASE
-              WHEN estado = 'TARDE'
-              THEN 1
-              ELSE 0
-            END
-          ) AS tarde,
+          COALESCE(
+            SUM(
+              CASE
+                WHEN estado = 'TARDE'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS tarde,
 
-          SUM(
-            CASE
-              WHEN estado = 'JUSTIFICADO'
-              THEN 1
-              ELSE 0
-            END
-          ) AS justificados
+          COALESCE(
+            SUM(
+              CASE
+                WHEN estado = 'JUSTIFICADO'
+                THEN 1
+                ELSE 0
+              END
+            ),
+            0
+          )::int AS justificados
 
         FROM asistencias
 
@@ -359,7 +407,7 @@ export class AsistenciasRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           id,
           codigo_estudiante,
           nombres,
@@ -369,12 +417,17 @@ export class AsistenciasRepository {
         FROM estudiantes
 
         WHERE id = @estudiante_id
+
+        LIMIT 1
         `,
         {
           estudiante_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[0] ??
+      null
+    );
   }
 }
