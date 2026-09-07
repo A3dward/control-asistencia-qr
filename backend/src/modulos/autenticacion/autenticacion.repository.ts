@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { BaseDatosService } from '../../base-datos/base-datos.service';
+import {
+  Injectable,
+} from '@nestjs/common';
+
+import {
+  BaseDatosService,
+} from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class AutenticacionRepository {
   constructor(
-    private readonly baseDatosService: BaseDatosService,
+    private readonly baseDatosService:
+      BaseDatosService,
   ) {}
 
   // =====================================
@@ -17,7 +23,7 @@ export class AutenticacionRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           u.id AS usuario_id,
           u.nombre_completo,
           u.correo,
@@ -41,13 +47,20 @@ export class AutenticacionRepository {
           ON d.usuario_id = u.id
 
         WHERE u.correo = @correo
+
+        LIMIT 1
         `,
         {
           correo,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[
+        0
+      ] ??
+      null
+    );
   }
 
   // =====================================
@@ -60,7 +73,7 @@ export class AutenticacionRepository {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(
         `
-        SELECT TOP 1
+        SELECT
           u.id AS usuario_id,
           u.nombre_completo,
           u.correo,
@@ -84,12 +97,19 @@ export class AutenticacionRepository {
           ON d.usuario_id = u.id
 
         WHERE u.id = @usuario_id
+
+        LIMIT 1
         `,
         {
           usuario_id,
         },
       );
 
-    return resultado.recordset[0] ?? null;
+    return (
+      resultado.recordset[
+        0
+      ] ??
+      null
+    );
   }
 }

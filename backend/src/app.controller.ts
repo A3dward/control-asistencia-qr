@@ -4,11 +4,21 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { BaseDatosService } from './base-datos/base-datos.service';
+import {
+  BaseDatosService,
+} from './base-datos/base-datos.service';
 
-import { AutenticacionGuard } from './modulos/autenticacion/guards/autenticacion.guard';
-import { RolesGuard } from './modulos/autenticacion/guards/roles.guard';
-import { Roles } from './modulos/autenticacion/decorators/roles.decorator';
+import {
+  AutenticacionGuard,
+} from './modulos/autenticacion/guards/autenticacion.guard';
+
+import {
+  RolesGuard,
+} from './modulos/autenticacion/guards/roles.guard';
+
+import {
+  Roles,
+} from './modulos/autenticacion/decorators/roles.decorator';
 
 @Controller()
 export class AppController {
@@ -35,8 +45,11 @@ export class AppController {
     const resultado =
       await this.baseDatosService.ejecutarConsulta(`
         SELECT
-          DB_NAME() AS base_datos,
-          SUSER_SNAME() AS usuario_windows
+          current_database()
+            AS base_datos,
+
+          current_user
+            AS usuario_base_datos
       `);
 
     return {

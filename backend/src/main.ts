@@ -1,36 +1,103 @@
-import { ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
+import {
+  ValidationPipe,
+} from '@nestjs/common';
+
+import {
+  NestFactory,
+} from '@nestjs/core';
+
+import {
+  ConfigService,
+} from '@nestjs/config';
+
+import {
+  AppModule,
+} from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app =
+    await NestFactory.create(
+      AppModule,
+    );
 
-  const configService = app.get(ConfigService);
+  const configService =
+    app.get(
+      ConfigService,
+    );
 
-  // Todas las rutas comenzarán con /api
-  app.setGlobalPrefix('api');
+  // =====================================
+  // PREFIJO API
+  // =====================================
 
-  // Permitirá la comunicación con el frontend React
+  app.setGlobalPrefix(
+    'api',
+  );
+
+  // =====================================
+  // CORS
+  // =====================================
+
+  const frontendUrl =
+    configService.get<string>(
+      'FRONTEND_URL',
+    );
+
+  const origenesPermitidos =
+    [
+      'http://localhost:5173',
+    ];
+
+  if (frontendUrl) {
+    origenesPermitidos.push(
+      frontendUrl,
+    );
+  }
+
   app.enableCors({
-    origin: 'http://localhost:5173',
-    credentials: true,
+    origin:
+      origenesPermitidos,
+
+    credentials:
+      true,
   });
 
-  // Validación global de los datos recibidos
+  // =====================================
+  // VALIDACION
+  // =====================================
+
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
+      whitelist:
+        true,
+
+      forbidNonWhitelisted:
+        true,
+
+      transform:
+        true,
     }),
   );
 
-  const port = configService.get<number>('PORT') ?? 3000;
+  // =====================================
+  // PUERTO
+  // =====================================
 
-  await app.listen(port);
+  const port =
+    Number(
+      configService.get<string>(
+        'PORT',
+      ) ??
+        3000,
+    );
 
-  console.log(`API ejecutándose en http://localhost:${port}/api`);
+  await app.listen(
+    port,
+    '0.0.0.0',
+  );
+
+  console.log(
+    `API ejecutandose en puerto ${port}`,
+  );
 }
 
 bootstrap();
