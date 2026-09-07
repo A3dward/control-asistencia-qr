@@ -1,0 +1,25 @@
+import {
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
+
+export class CrearSeccionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  nombre: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  grado: string;
+
+  @IsInt()
+  @Min(2000)
+  @Max(2100)
+  anio_academico: number;
+}
