@@ -1,18 +1,21 @@
 import {
   ArrowLeftOutlined,
   EditOutlined,
+  IdcardOutlined,
   PlusOutlined,
   PoweroffOutlined,
   QrcodeOutlined,
 } from '@ant-design/icons';
 
 import {
+  Alert,
   Button,
   Card,
   Form,
   Input,
   Modal,
   Popconfirm,
+  Select,
   Space,
   Table,
   Tag,
@@ -28,6 +31,7 @@ import axios from 'axios';
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -64,7 +68,45 @@ interface Estudiante {
   fecha_actualizacion?: string | null;
 }
 
+interface Seccion {
+  id: number;
+
+  nombre: string;
+
+  grado: string;
+
+  anio_academico: number;
+
+  activo: boolean;
+}
+
+interface Inscripcion {
+  id: number;
+
+  estudiante_id: number;
+
+  seccion_id: number;
+
+  fecha_inscripcion: string;
+
+  activo: boolean;
+
+  codigo_estudiante: string;
+
+  nombres: string;
+
+  apellidos: string;
+
+  seccion: string;
+
+  grado: string;
+
+  anio_academico: number;
+}
+
 interface FormularioEstudiante {
+  seccion_id?: number;
+
   codigo_estudiante: string;
 
   nombres: string;
@@ -81,16 +123,37 @@ export default function Estudiantes() {
     useNavigate();
 
   const [
+    form,
+  ] =
+    Form.useForm<FormularioEstudiante>();
+
+  const [
     estudiantes,
     setEstudiantes,
   ] =
-    useState<Estudiante[]>(
-      [],
-    );
+    useState<Estudiante[]>([]);
+
+  const [
+    secciones,
+    setSecciones,
+  ] =
+    useState<Seccion[]>([]);
+
+  const [
+    inscripciones,
+    setInscripciones,
+  ] =
+    useState<Inscripcion[]>([]);
 
   const [
     cargando,
     setCargando,
+  ] =
+    useState(true);
+
+  const [
+    guardando,
+    setGuardando,
   ] =
     useState(false);
 
@@ -107,12 +170,6 @@ export default function Estudiantes() {
     useState<Estudiante | null>(
       null,
     );
-
-  const [
-    guardando,
-    setGuardando,
-  ] =
-    useState(false);
 
   const [
     modalQrAbierto,
@@ -142,10 +199,66 @@ export default function Estudiantes() {
   ] =
     useState(false);
 
-  const [
-    form,
-  ] =
-    Form.useForm<FormularioEstudiante>();
+  // =====================================
+  // MENSAJE DE ERROR
+  // =====================================
+
+  const obtenerMensajeError = (
+    error: unknown,
+    predeterminado: string,
+  ) => {
+    if (
+      axios.isAxiosError(
+        error,
+      )
+    ) {
+      const respuesta =
+        error.response
+          ?.data
+          ?.message;
+
+      if (
+        Array.isArray(
+          respuesta,
+        )
+      ) {
+        return respuesta.join(
+          ', ',
+        );
+      }
+
+      return (
+        respuesta ??
+        predeterminado
+      );
+    }
+
+    return predeterminado;
+  };
+
+  // =====================================
+  // NOMBRE DE CLASE
+  // =====================================
+
+  const obtenerNombreClase = (
+    clase: {
+      grado: string;
+
+      seccion: string;
+
+      anio_academico: number;
+    },
+  ) => {
+    const mostrarSeccion =
+      clase.seccion &&
+      clase.seccion
+        .toLowerCase() !==
+        'general';
+
+    return mostrarSeccion
+      ? `${clase.grado} - Seccion ${clase.seccion} - ${clase.anio_academico}`
+      : `${clase.grado} - ${clase.anio_academico}`;
+  };
 
   // =====================================
   // OBTENER ESTUDIANTES
@@ -153,68 +266,266 @@ export default function Estudiantes() {
 
   const obtenerEstudiantes =
     async () => {
-      setCargando(true);
-
-      try {
-        const respuesta =
-          await api.get(
-            '/estudiantes',
-          );
-
-        const datos =
-          respuesta.data.datos ??
-          [];
-
-        const estudiantesNormalizados =
-          datos.map(
-            (
-              estudiante: any,
-            ) => ({
-              ...estudiante,
-
-              id:
-                Number(
-                  estudiante.id,
-                ),
-
-              activo:
-                Boolean(
-                  estudiante.activo,
-                ),
-            }),
-          );
-
-        setEstudiantes(
-          estudiantesNormalizados,
+      const respuesta =
+        await api.get(
+          '/estudiantes',
         );
-      } catch (error) {
-        if (
-          axios.isAxiosError(
+
+      const datos =
+        respuesta.data
+          .datos ?? [];
+
+      const normalizados:
+        Estudiante[] =
+        datos.map(
+          (
+            estudiante: any,
+          ) => ({
+            ...estudiante,
+
+            id:
+              Number(
+                estudiante.id,
+              ),
+
+            activo:
+              Boolean(
+                estudiante.activo,
+              ),
+          }),
+        );
+
+      setEstudiantes(
+        normalizados,
+      );
+    };
+
+  // =====================================
+  // OBTENER TODAS LAS CLASES
+  // ADMIN
+  // =====================================
+
+  const obtenerSecciones =
+    async () => {
+      const respuesta =
+        await api.get(
+          '/secciones',
+        );
+
+      const datos =
+        respuesta.data
+          .datos ?? [];
+
+      const normalizadas:
+        Seccion[] =
+        datos.map(
+          (
+            seccion: any,
+          ) => ({
+            ...seccion,
+
+            id:
+              Number(
+                seccion.id,
+              ),
+
+            anio_academico:
+              Number(
+                seccion.anio_academico,
+              ),
+
+            activo:
+              Boolean(
+                seccion.activo,
+              ),
+          }),
+        );
+
+      setSecciones(
+        normalizadas,
+      );
+    };
+
+  // =====================================
+  // OBTENER INSCRIPCIONES
+  // PARA MOSTRAR LA CLASE ACTUAL
+  // =====================================
+
+  const obtenerInscripciones =
+    async () => {
+      const respuesta =
+        await api.get(
+          '/inscripciones',
+        );
+
+      const datos =
+        respuesta.data
+          .datos ?? [];
+
+      const normalizadas:
+        Inscripcion[] =
+        datos.map(
+          (
+            inscripcion: any,
+          ) => ({
+            ...inscripcion,
+
+            id:
+              Number(
+                inscripcion.id,
+              ),
+
+            estudiante_id:
+              Number(
+                inscripcion.estudiante_id,
+              ),
+
+            seccion_id:
+              Number(
+                inscripcion.seccion_id,
+              ),
+
+            anio_academico:
+              Number(
+                inscripcion.anio_academico,
+              ),
+
+            activo:
+              Boolean(
+                inscripcion.activo,
+              ),
+          }),
+        );
+
+      setInscripciones(
+        normalizadas,
+      );
+    };
+
+  // =====================================
+  // CARGAR DATOS
+  // =====================================
+
+  const cargarDatos =
+    async () => {
+      try {
+        setCargando(
+          true,
+        );
+
+        await Promise.all([
+          obtenerEstudiantes(),
+          obtenerSecciones(),
+          obtenerInscripciones(),
+        ]);
+      } catch (
+        error
+      ) {
+        message.error(
+          obtenerMensajeError(
             error,
-          )
-        ) {
-          message.error(
-            error.response
-              ?.data
-              ?.message ??
-              'No fue posible obtener los estudiantes.',
-          );
-        } else {
-          message.error(
-            'Ocurrio un error al obtener los estudiantes.',
-          );
-        }
+            'No fue posible cargar la informacion de estudiantes.',
+          ),
+        );
       } finally {
-        setCargando(false);
+        setCargando(
+          false,
+        );
       }
     };
 
-  useEffect(() => {
-    obtenerEstudiantes();
-  }, []);
+  useEffect(
+    () => {
+      cargarDatos();
+    },
+    [],
+  );
 
   // =====================================
-  // NUEVO ESTUDIANTE
+  // INSCRIPCION ACTIVA POR ESTUDIANTE
+  // =====================================
+
+  const inscripcionPorEstudiante =
+    useMemo(
+      () => {
+        const mapa =
+          new Map<
+            number,
+            Inscripcion
+          >();
+
+        inscripciones
+          .filter(
+            (
+              inscripcion,
+            ) =>
+              Boolean(
+                inscripcion.activo,
+              ),
+          )
+          .forEach(
+            (
+              inscripcion,
+            ) => {
+              mapa.set(
+                Number(
+                  inscripcion.estudiante_id,
+                ),
+                inscripcion,
+              );
+            },
+          );
+
+        return mapa;
+      },
+      [
+        inscripciones,
+      ],
+    );
+
+  // =====================================
+  // TODAS LAS CLASES ACTIVAS PARA ADMIN
+  // =====================================
+
+  const opcionesClases =
+    useMemo(
+      () =>
+        secciones
+          .filter(
+            (
+              seccion,
+            ) =>
+              Boolean(
+                seccion.activo,
+              ),
+          )
+          .map(
+            (
+              seccion,
+            ) => ({
+              value:
+                seccion.id,
+
+              label:
+                obtenerNombreClase({
+                  grado:
+                    seccion.grado,
+
+                  seccion:
+                    seccion.nombre,
+
+                  anio_academico:
+                    seccion.anio_academico,
+                }),
+            }),
+          ),
+      [
+        secciones,
+      ],
+    );
+
+  // =====================================
+  // NUEVO
   // =====================================
 
   const abrirNuevo = () => {
@@ -234,11 +545,17 @@ export default function Estudiantes() {
   // =====================================
 
   const abrirEditar = (
-    estudiante: Estudiante,
+    estudiante:
+      Estudiante,
   ) => {
     setEstudianteEditando(
       estudiante,
     );
+
+    const inscripcion =
+      inscripcionPorEstudiante.get(
+        estudiante.id,
+      );
 
     form.setFieldsValue({
       codigo_estudiante:
@@ -249,6 +566,10 @@ export default function Estudiantes() {
 
       apellidos:
         estudiante.apellidos,
+
+      seccion_id:
+        inscripcion
+          ?.seccion_id,
     });
 
     setModalAbierto(
@@ -281,9 +602,15 @@ export default function Estudiantes() {
       valores:
         FormularioEstudiante,
     ) => {
-      setGuardando(true);
-
       try {
+        setGuardando(
+          true,
+        );
+
+        // =================================
+        // EDITAR ESTUDIANTE
+        // =================================
+
         if (
           estudianteEditando
         ) {
@@ -291,86 +618,141 @@ export default function Estudiantes() {
             `/estudiantes/${estudianteEditando.id}`,
             {
               codigo_estudiante:
-                valores.codigo_estudiante,
+                valores.codigo_estudiante
+                  .trim()
+                  .toUpperCase(),
 
               nombres:
-                valores.nombres,
+                valores.nombres
+                  .trim(),
 
               apellidos:
-                valores.apellidos,
+                valores.apellidos
+                  .trim(),
             },
           );
 
           message.success(
             'Estudiante actualizado correctamente.',
           );
-        } else {
+
+          cerrarModal();
+
+          await cargarDatos();
+
+          return;
+        }
+
+        // =================================
+        // NUEVO ESTUDIANTE
+        // =================================
+
+        if (
+          !valores.seccion_id
+        ) {
+          message.error(
+            'Seleccione la clase del estudiante.',
+          );
+
+          return;
+        }
+
+        // =================================
+        // PASO 1:
+        // CREAR ESTUDIANTE
+        // =================================
+
+        const respuestaEstudiante =
           await api.post(
             '/estudiantes',
             {
               codigo_estudiante:
-                valores.codigo_estudiante,
+                valores.codigo_estudiante
+                  .trim()
+                  .toUpperCase(),
 
               nombres:
-                valores.nombres,
+                valores.nombres
+                  .trim(),
 
               apellidos:
-                valores.apellidos,
+                valores.apellidos
+                  .trim(),
             },
           );
 
-          message.success(
-            'Estudiante registrado correctamente.',
+        const estudianteCreado =
+          respuestaEstudiante
+            .data
+            .datos;
+
+        // =================================
+        // PASO 2:
+        // INSCRIBIR AUTOMATICAMENTE
+        // EN LA CLASE SELECCIONADA
+        // =================================
+
+        try {
+          await api.post(
+            '/inscripciones',
+            {
+              estudiante_id:
+                Number(
+                  estudianteCreado.id,
+                ),
+
+              seccion_id:
+                Number(
+                  valores.seccion_id,
+                ),
+            },
           );
+        } catch (
+          errorInscripcion
+        ) {
+          message.error(
+            obtenerMensajeError(
+              errorInscripcion,
+              'El estudiante fue creado, pero no fue posible asignarlo a la clase.',
+            ),
+          );
+
+          await cargarDatos();
+
+          return;
         }
+
+        message.success(
+          'Estudiante registrado y asignado a su clase correctamente.',
+        );
 
         cerrarModal();
 
-        await obtenerEstudiantes();
-      } catch (error) {
-        if (
-          axios.isAxiosError(
+        await cargarDatos();
+      } catch (
+        error
+      ) {
+        message.error(
+          obtenerMensajeError(
             error,
-          )
-        ) {
-          const respuesta =
-            error.response
-              ?.data
-              ?.message;
-
-          if (
-            Array.isArray(
-              respuesta,
-            )
-          ) {
-            message.error(
-              respuesta.join(
-                ', ',
-              ),
-            );
-          } else {
-            message.error(
-              respuesta ??
-                'No fue posible guardar el estudiante.',
-            );
-          }
-        } else {
-          message.error(
-            'Ocurrio un error inesperado.',
-          );
-        }
+            'No fue posible guardar el estudiante.',
+          ),
+        );
       } finally {
-        setGuardando(false);
+        setGuardando(
+          false,
+        );
       }
     };
 
   // =====================================
-  // CAMBIAR ESTADO
+  // ACTIVAR / DESACTIVAR ESTUDIANTE
   // =====================================
 
   const cambiarEstado =
     async (
-      estudiante: Estudiante,
+      estudiante:
+        Estudiante,
     ) => {
       try {
         const ruta =
@@ -388,48 +770,51 @@ export default function Estudiantes() {
             : 'Estudiante activado correctamente.',
         );
 
-        await obtenerEstudiantes();
-      } catch (error) {
-        if (
-          axios.isAxiosError(
+        await cargarDatos();
+      } catch (
+        error
+      ) {
+        message.error(
+          obtenerMensajeError(
             error,
-          )
-        ) {
-          message.error(
-            error.response
-              ?.data
-              ?.message ??
-              'No fue posible cambiar el estado.',
-          );
-        } else {
-          message.error(
-            'Ocurrio un error inesperado.',
-          );
-        }
+            'No fue posible cambiar el estado del estudiante.',
+          ),
+        );
       }
     };
 
   // =====================================
-  // OBTENER QR
+  // QR
   // =====================================
 
   const abrirQr =
     async (
-      estudiante: Estudiante,
+      estudiante:
+        Estudiante,
     ) => {
-      setEstudianteQr(
-        estudiante,
-      );
-
-      setModalQrAbierto(
-        true,
-      );
-
-      setCargandoQr(
-        true,
-      );
-
       try {
+        setEstudianteQr(
+          estudiante,
+        );
+
+        setModalQrAbierto(
+          true,
+        );
+
+        setCargandoQr(
+          true,
+        );
+
+        if (qrUrl) {
+          URL.revokeObjectURL(
+            qrUrl,
+          );
+
+          setQrUrl(
+            null,
+          );
+        }
+
         const respuesta =
           await api.get(
             `/estudiantes/${estudiante.id}/qr`,
@@ -439,21 +824,22 @@ export default function Estudiantes() {
             },
           );
 
-        const url =
+        const nuevaUrl =
           URL.createObjectURL(
             respuesta.data,
           );
 
         setQrUrl(
-          url,
+          nuevaUrl,
         );
-      } catch (error) {
+      } catch (
+        error
+      ) {
         message.error(
-          axios.isAxiosError(
+          obtenerMensajeError(
             error,
-          )
-            ? 'No fue posible obtener el codigo QR.'
-            : 'Ocurrio un error al cargar el QR.',
+            'No fue posible obtener el codigo QR.',
+          ),
         );
 
         setModalQrAbierto(
@@ -465,10 +851,6 @@ export default function Estudiantes() {
         );
       }
     };
-
-  // =====================================
-  // CERRAR QR
-  // =====================================
 
   const cerrarQr = () => {
     if (qrUrl) {
@@ -499,7 +881,7 @@ export default function Estudiantes() {
     [
       {
         title:
-          'Codigo',
+          'Carnet',
 
         dataIndex:
           'codigo_estudiante',
@@ -508,29 +890,62 @@ export default function Estudiantes() {
           'codigo_estudiante',
 
         width:
-          140,
+          150,
       },
 
       {
         title:
-          'Nombres',
-
-        dataIndex:
-          'nombres',
+          'Estudiante',
 
         key:
-          'nombres',
+          'estudiante',
+
+        render: (
+          _,
+          estudiante,
+        ) =>
+          `${estudiante.nombres} ${estudiante.apellidos}`,
       },
 
       {
         title:
-          'Apellidos',
-
-        dataIndex:
-          'apellidos',
+          'Clase',
 
         key:
-          'apellidos',
+          'clase',
+
+        render: (
+          _,
+          estudiante,
+        ) => {
+          const inscripcion =
+            inscripcionPorEstudiante.get(
+              estudiante.id,
+            );
+
+          if (
+            !inscripcion
+          ) {
+            return (
+              <Tag
+                color="orange"
+              >
+                SIN CLASE
+              </Tag>
+            );
+          }
+
+          return obtenerNombreClase({
+            grado:
+              inscripcion.grado,
+
+            seccion:
+              inscripcion.seccion,
+
+            anio_academico:
+              inscripcion.anio_academico,
+          });
+        },
       },
 
       {
@@ -547,7 +962,8 @@ export default function Estudiantes() {
           120,
 
         render: (
-          activo: boolean,
+          activo:
+            boolean,
         ) => (
           <Tag
             color={
@@ -651,13 +1067,21 @@ export default function Estudiantes() {
       },
     ];
 
-  return (
-    <div className="pagina-administracion">
-      {/* =====================================
-          ENCABEZADO
-      ====================================== */}
+  // =====================================
+  // VISTA
+  // =====================================
 
-      <div className="pagina-encabezado">
+  return (
+    <div
+      className="pagina-administracion"
+    >
+      {/* ================================= */}
+      {/* ENCABEZADO */}
+      {/* ================================= */}
+
+      <div
+        className="pagina-encabezado"
+      >
         <div>
           <Button
             type="text"
@@ -687,9 +1111,9 @@ export default function Estudiantes() {
           <Text
             type="secondary"
           >
-            Registro y administracion
-            de estudiantes del
-            establecimiento.
+            Registre un estudiante
+            y seleccione directamente
+            la clase a la que pertenece.
           </Text>
         </div>
 
@@ -707,9 +1131,24 @@ export default function Estudiantes() {
         </Button>
       </div>
 
-      {/* =====================================
-          TABLA
-      ====================================== */}
+      {/* ================================= */}
+      {/* INFORMACION */}
+      {/* ================================= */}
+
+      <Alert
+        type="info"
+        showIcon
+        message="Registro de estudiante"
+        description="El administrador puede registrar al estudiante en cualquiera de las clases activas del establecimiento."
+        style={{
+          marginBottom:
+            20,
+        }}
+      />
+
+      {/* ================================= */}
+      {/* TABLA */}
+      {/* ================================= */}
 
       <Card>
         <Table
@@ -724,10 +1163,12 @@ export default function Estudiantes() {
             cargando
           }
           scroll={{
-            x: 950,
+            x:
+              1000,
           }}
           pagination={{
-            pageSize: 10,
+            pageSize:
+              10,
 
             showSizeChanger:
               true,
@@ -740,15 +1181,15 @@ export default function Estudiantes() {
         />
       </Card>
 
-      {/* =====================================
-          MODAL CREAR / EDITAR
-      ====================================== */}
+      {/* ================================= */}
+      {/* MODAL NUEVO / EDITAR */}
+      {/* ================================= */}
 
       <Modal
         title={
           estudianteEditando
             ? 'Editar estudiante'
-            : 'Nuevo estudiante'
+            : 'Registrar nuevo estudiante'
         }
         open={
           modalAbierto
@@ -770,8 +1211,55 @@ export default function Estudiantes() {
             guardarEstudiante
           }
         >
+          {/* ================================= */}
+          {/* CLASE PRIMERO */}
+          {/* ================================= */}
+
           <Form.Item
-            label="Codigo del estudiante"
+            label="¿A que clase pertenece?"
+            name="seccion_id"
+            extra={
+              estudianteEditando
+                ? 'La clase se muestra como referencia y no se modifica desde esta opcion.'
+                : 'Como administrador puede seleccionar cualquier clase activa.'
+            }
+            rules={
+              estudianteEditando
+                ? []
+                : [
+                    {
+                      required:
+                        true,
+
+                      message:
+                        'Seleccione la clase del estudiante.',
+                    },
+                  ]
+            }
+          >
+            <Select
+              size="large"
+              showSearch
+              optionFilterProp="label"
+              placeholder="Seleccione la clase"
+              options={
+                opcionesClases
+              }
+              disabled={
+                Boolean(
+                  estudianteEditando,
+                )
+              }
+              notFoundContent="No hay clases activas"
+            />
+          </Form.Item>
+
+          {/* ================================= */}
+          {/* CARNET */}
+          {/* ================================= */}
+
+          <Form.Item
+            label="Carnet o codigo del estudiante"
             name="codigo_estudiante"
             rules={[
               {
@@ -779,7 +1267,15 @@ export default function Estudiantes() {
                   true,
 
                 message:
-                  'Ingrese el codigo del estudiante.',
+                  'Ingrese el carnet o codigo del estudiante.',
+              },
+
+              {
+                whitespace:
+                  true,
+
+                message:
+                  'Ingrese un carnet valido.',
               },
 
               {
@@ -792,9 +1288,20 @@ export default function Estudiantes() {
             ]}
           >
             <Input
-              placeholder="EST-001"
+              size="large"
+              prefix={
+                <IdcardOutlined />
+              }
+              placeholder="Ejemplo: 2026-001"
+              maxLength={
+                30
+              }
             />
           </Form.Item>
+
+          {/* ================================= */}
+          {/* NOMBRES */}
+          {/* ================================= */}
 
           <Form.Item
             label="Nombres"
@@ -809,6 +1316,14 @@ export default function Estudiantes() {
               },
 
               {
+                whitespace:
+                  true,
+
+                message:
+                  'Ingrese nombres validos.',
+              },
+
+              {
                 max:
                   100,
 
@@ -818,9 +1333,17 @@ export default function Estudiantes() {
             ]}
           >
             <Input
-              placeholder="Ana Maria"
+              size="large"
+              placeholder="Ejemplo: Juan Carlos"
+              maxLength={
+                100
+              }
             />
           </Form.Item>
+
+          {/* ================================= */}
+          {/* APELLIDOS */}
+          {/* ================================= */}
 
           <Form.Item
             label="Apellidos"
@@ -835,6 +1358,14 @@ export default function Estudiantes() {
               },
 
               {
+                whitespace:
+                  true,
+
+                message:
+                  'Ingrese apellidos validos.',
+              },
+
+              {
                 max:
                   100,
 
@@ -844,11 +1375,27 @@ export default function Estudiantes() {
             ]}
           >
             <Input
-              placeholder="Lopez Garcia"
+              size="large"
+              placeholder="Ejemplo: Perez Lopez"
+              maxLength={
+                100
+              }
             />
           </Form.Item>
 
-          <div className="modal-acciones">
+          {/* ================================= */}
+          {/* BOTONES */}
+          {/* ================================= */}
+
+          <Space
+            style={{
+              width:
+                '100%',
+
+              justifyContent:
+                'flex-end',
+            }}
+          >
             <Button
               onClick={
                 cerrarModal
@@ -868,13 +1415,13 @@ export default function Estudiantes() {
                 ? 'Guardar cambios'
                 : 'Registrar estudiante'}
             </Button>
-          </div>
+          </Space>
         </Form>
       </Modal>
 
-      {/* =====================================
-          MODAL QR
-      ====================================== */}
+      {/* ================================= */}
+      {/* QR */}
+      {/* ================================= */}
 
       <Modal
         title="Codigo QR del estudiante"
@@ -894,52 +1441,75 @@ export default function Estudiantes() {
             Cerrar
           </Button>,
         ]}
+        destroyOnHidden
       >
-        <div className="qr-contenedor">
-          {estudianteQr && (
-            <>
-              <Title
-                level={4}
-                style={{
-                  marginBottom:
-                    4,
-                }}
-              >
-                {
-                  estudianteQr.nombres
-                }{' '}
-                {
-                  estudianteQr.apellidos
-                }
-              </Title>
+        <div
+          style={{
+            textAlign:
+              'center',
 
-              <Text
-                type="secondary"
-              >
-                {
-                  estudianteQr.codigo_estudiante
-                }
-              </Text>
+            padding:
+              20,
+          }}
+        >
+          {cargandoQr ? (
+            <Text>
+              Generando codigo QR...
+            </Text>
+          ) : (
+            <>
+              {estudianteQr && (
+                <>
+                  <Title
+                    level={4}
+                    style={{
+                      marginBottom:
+                        4,
+                    }}
+                  >
+                    {
+                      estudianteQr.nombres
+                    }{' '}
+                    {
+                      estudianteQr.apellidos
+                    }
+                  </Title>
+
+                  <Text
+                    type="secondary"
+                  >
+                    Carnet:{' '}
+                    {
+                      estudianteQr.codigo_estudiante
+                    }
+                  </Text>
+                </>
+              )}
+
+              {qrUrl && (
+                <div
+                  style={{
+                    marginTop:
+                      20,
+                  }}
+                >
+                  <img
+                    src={
+                      qrUrl
+                    }
+                    alt="Codigo QR del estudiante"
+                    style={{
+                      maxWidth:
+                        300,
+
+                      width:
+                        '100%',
+                    }}
+                  />
+                </div>
+              )}
             </>
           )}
-
-          <div className="qr-imagen-contenedor">
-            {cargandoQr ? (
-              <Text>
-                Cargando codigo QR...
-              </Text>
-            ) : (
-              qrUrl && (
-                <img
-                  src={
-                    qrUrl
-                  }
-                  alt="Codigo QR del estudiante"
-                  className="qr-imagen"
-                />
-              )
-            )}
-          </div>
         </div>
       </Modal>
     </div>

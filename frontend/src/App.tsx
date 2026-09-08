@@ -26,14 +26,14 @@ import Cursos from './paginas/Cursos';
 
 import CursosClases from './paginas/CursosClases';
 
-import Inscripciones from './paginas/Inscripciones';
-
 import Asignaciones from './paginas/Asignaciones';
 
 function App() {
   return (
     <Routes>
+      {/* ================================= */}
       {/* LOGIN */}
+      {/* ================================= */}
 
       <Route
         path="/login"
@@ -42,7 +42,9 @@ function App() {
         }
       />
 
+      {/* ================================= */}
       {/* ADMIN */}
+      {/* ================================= */}
 
       <Route
         element={
@@ -96,13 +98,6 @@ function App() {
         />
 
         <Route
-          path="/admin/inscripciones"
-          element={
-            <Inscripciones />
-          }
-        />
-
-        <Route
           path="/admin/asignaciones"
           element={
             <Asignaciones />
@@ -110,7 +105,9 @@ function App() {
         />
       </Route>
 
+      {/* ================================= */}
       {/* DOCENTE */}
+      {/* ================================= */}
 
       <Route
         element={
@@ -142,6 +139,10 @@ function App() {
           }
         />
       </Route>
+
+      {/* ================================= */}
+      {/* REDIRECCIONES */}
+      {/* ================================= */}
 
       <Route
         path="/"

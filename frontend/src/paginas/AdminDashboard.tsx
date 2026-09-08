@@ -6,7 +6,6 @@ import {
   SolutionOutlined,
   TeamOutlined,
   UserOutlined,
-  UsergroupAddOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -53,8 +52,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="dashboard-pagina">
-      <div className="dashboard-encabezado">
+    <div
+      className="dashboard-pagina"
+    >
+      <div
+        className="dashboard-encabezado"
+      >
         <div>
           <Title
             level={2}
@@ -95,7 +98,13 @@ export default function AdminDashboard() {
           16,
         ]}
       >
-        <Col xs={24} sm={12} lg={8}>
+        {/* ESTUDIANTES */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -113,13 +122,21 @@ export default function AdminDashboard() {
               Estudiantes
             </Title>
 
-            <Text type="secondary">
-              Registrar y administrar estudiantes.
+            <Text
+              type="secondary"
+            >
+              Registrar estudiantes y asignar su clase.
             </Text>
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={8}>
+        {/* DOCENTES */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -137,13 +154,21 @@ export default function AdminDashboard() {
               Docentes
             </Title>
 
-            <Text type="secondary">
+            <Text
+              type="secondary"
+            >
               Gestionar docentes del establecimiento.
             </Text>
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={8}>
+        {/* CLASES */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -161,13 +186,21 @@ export default function AdminDashboard() {
               Clases
             </Title>
 
-            <Text type="secondary">
+            <Text
+              type="secondary"
+            >
               Administrar grados, secciones y ciclos.
             </Text>
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={8}>
+        {/* CURSOS */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -185,13 +218,21 @@ export default function AdminDashboard() {
               Cursos
             </Title>
 
-            <Text type="secondary">
+            <Text
+              type="secondary"
+            >
               Crear y administrar los cursos.
             </Text>
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={8}>
+        {/* CURSOS POR CLASE */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -209,13 +250,21 @@ export default function AdminDashboard() {
               Cursos por clase
             </Title>
 
-            <Text type="secondary">
+            <Text
+              type="secondary"
+            >
               Definir los cursos que pertenecen a cada clase.
             </Text>
           </Card>
         </Col>
 
-        <Col xs={24} sm={12} lg={8}>
+        {/* ASIGNACIONES */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={8}
+        >
           <Card
             hoverable
             className="dashboard-card"
@@ -233,32 +282,10 @@ export default function AdminDashboard() {
               Asignaciones
             </Title>
 
-            <Text type="secondary">
+            <Text
+              type="secondary"
+            >
               Asignar clases completas a los docentes.
-            </Text>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/inscripciones',
-              )
-            }
-          >
-            <UsergroupAddOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Inscripciones
-            </Title>
-
-            <Text type="secondary">
-              Administrar estudiantes inscritos en clases.
             </Text>
           </Card>
         </Col>
