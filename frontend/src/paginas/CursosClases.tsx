@@ -42,18 +42,29 @@ const {
   Text,
 } = Typography;
 
+// =====================================
+// INTERFACES
+// =====================================
+
 interface Curso {
   id: number;
+
   codigo: string;
+
   nombre: string;
+
   activo: boolean;
 }
 
 interface Clase {
   id: number;
+
   nombre: string;
+
   grado: string;
+
   anio_academico: number;
+
   activo: boolean;
 }
 
@@ -86,6 +97,10 @@ interface Formulario {
 
   seccion_id: number;
 }
+
+// =====================================
+// COMPONENTE
+// =====================================
 
 export default function CursosClases() {
   const navigate =
@@ -126,6 +141,10 @@ export default function CursosClases() {
   ] =
     useState(false);
 
+  // =====================================
+  // MENSAJE DE ERROR
+  // =====================================
+
   const obtenerMensajeError = (
     error: any,
     predeterminado: string,
@@ -150,6 +169,10 @@ export default function CursosClases() {
       predeterminado
     );
   };
+
+  // =====================================
+  // NOMBRE DE LA CLASE
+  // =====================================
 
   const nombreClase = (
     clase: {
@@ -178,63 +201,241 @@ export default function CursosClases() {
       : `${clase.grado} - ${clase.anio_academico}`;
   };
 
-  const cargarDatos =
+  // =====================================
+  // CARGAR CURSOS
+  // =====================================
+
+  const cargarCursos =
     async () => {
       try {
-        setCargando(
-          true,
-        );
+        const respuesta =
+          await api.get(
+            '/cursos',
+          );
 
-        const [
-          respuestaCursos,
-          respuestaClases,
-          respuestaRelaciones,
-        ] =
-          await Promise.all([
-            api.get(
-              '/cursos',
-            ),
+        const datos =
+          respuesta.data
+            .datos ?? [];
 
-            api.get(
-              '/secciones',
-            ),
+        const normalizados:
+          Curso[] =
+          datos.map(
+            (
+              curso: any,
+            ) => ({
+              id:
+                Number(
+                  curso.id,
+                ),
 
-            api.get(
-              '/gestion-clases/configuracion-cursos',
-            ),
-          ]);
+              codigo:
+                curso.codigo,
+
+              nombre:
+                curso.nombre,
+
+              activo:
+                Boolean(
+                  curso.activo,
+                ),
+            }),
+          );
 
         setCursos(
-          respuestaCursos
-            .data
-            .datos ?? [],
-        );
-
-        setClases(
-          respuestaClases
-            .data
-            .datos ?? [],
-        );
-
-        setRelaciones(
-          respuestaRelaciones
-            .data
-            .datos ?? [],
+          normalizados,
         );
       } catch (
         error: any
       ) {
+        console.error(
+          'Error cursos:',
+          error,
+        );
+
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible cargar la configuracion.',
+            'No fue posible cargar los cursos.',
           ),
         );
-      } finally {
-        setCargando(
-          false,
+      }
+    };
+
+  // =====================================
+  // CARGAR CLASES
+  // =====================================
+
+  const cargarClases =
+    async () => {
+      try {
+        const respuesta =
+          await api.get(
+            '/secciones',
+          );
+
+        const datos =
+          respuesta.data
+            .datos ?? [];
+
+        const normalizadas:
+          Clase[] =
+          datos.map(
+            (
+              clase: any,
+            ) => ({
+              id:
+                Number(
+                  clase.id,
+                ),
+
+              nombre:
+                clase.nombre,
+
+              grado:
+                clase.grado,
+
+              anio_academico:
+                Number(
+                  clase.anio_academico,
+                ),
+
+              activo:
+                Boolean(
+                  clase.activo,
+                ),
+            }),
+          );
+
+        setClases(
+          normalizadas,
+        );
+      } catch (
+        error: any
+      ) {
+        console.error(
+          'Error clases:',
+          error,
+        );
+
+        message.error(
+          obtenerMensajeError(
+            error,
+            'No fue posible cargar las clases.',
+          ),
         );
       }
+    };
+
+  // =====================================
+  // CARGAR CURSOS ASIGNADOS A CLASES
+  // =====================================
+
+  const cargarRelaciones =
+    async () => {
+      try {
+        const respuesta =
+          await api.get(
+            '/gestion-clases/configuracion-cursos',
+          );
+
+        const datos =
+          respuesta.data
+            .datos ?? [];
+
+        const normalizadas:
+          CursoClase[] =
+          datos.map(
+            (
+              relacion: any,
+            ) => ({
+              id:
+                Number(
+                  relacion.id,
+                ),
+
+              curso_id:
+                Number(
+                  relacion.curso_id,
+                ),
+
+              seccion_id:
+                Number(
+                  relacion.seccion_id,
+                ),
+
+              activo:
+                Boolean(
+                  relacion.activo,
+                ),
+
+              codigo_curso:
+                relacion.codigo_curso,
+
+              curso:
+                relacion.curso,
+
+              curso_activo:
+                Boolean(
+                  relacion.curso_activo,
+                ),
+
+              seccion:
+                relacion.seccion,
+
+              grado:
+                relacion.grado,
+
+              anio_academico:
+                Number(
+                  relacion.anio_academico,
+                ),
+
+              clase_activa:
+                Boolean(
+                  relacion.clase_activa,
+                ),
+            }),
+          );
+
+        setRelaciones(
+          normalizadas,
+        );
+      } catch (
+        error: any
+      ) {
+        console.error(
+          'Error relaciones:',
+          error,
+        );
+
+        message.error(
+          obtenerMensajeError(
+            error,
+            'No fue posible cargar los cursos asignados a las clases.',
+          ),
+        );
+      }
+    };
+
+  // =====================================
+  // CARGAR TODO
+  // =====================================
+
+  const cargarDatos =
+    async () => {
+      setCargando(
+        true,
+      );
+
+      await Promise.allSettled([
+        cargarCursos(),
+        cargarClases(),
+        cargarRelaciones(),
+      ]);
+
+      setCargando(
+        false,
+      );
     };
 
   useEffect(
@@ -244,13 +445,14 @@ export default function CursosClases() {
     [],
   );
 
-  // Los cursos activos que ya pertenecen
-  // a otra clase no aparecen nuevamente.
+  // =====================================
+  // CURSOS DISPONIBLES
+  // =====================================
 
   const cursosDisponibles =
     useMemo(
       () => {
-        const asignados =
+        const cursosAsignados =
           new Set(
             relaciones
               .filter(
@@ -278,7 +480,7 @@ export default function CursosClases() {
             Boolean(
               curso.activo,
             ) &&
-            !asignados.has(
+            !cursosAsignados.has(
               Number(
                 curso.id,
               ),
@@ -290,6 +492,10 @@ export default function CursosClases() {
         relaciones,
       ],
     );
+
+  // =====================================
+  // ASIGNAR CURSO
+  // =====================================
 
   const asignarCurso =
     async (
@@ -339,6 +545,10 @@ export default function CursosClases() {
       }
     };
 
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
+
   const cambiarEstado =
     async (
       relacion:
@@ -372,6 +582,10 @@ export default function CursosClases() {
         );
       }
     };
+
+  // =====================================
+  // COLUMNAS
+  // =====================================
 
   const columnas:
     TableColumnsType<CursoClase> =
@@ -510,6 +724,10 @@ export default function CursosClases() {
       },
     ];
 
+  // =====================================
+  // VISTA
+  // =====================================
+
   return (
     <div
       className="pagina-administracion"
@@ -573,8 +791,8 @@ export default function CursosClases() {
         <Alert
           type="info"
           showIcon
-          message="Seleccione un curso y la clase a la que pertenece."
-          description="Cuando posteriormente asigne esta clase a un docente, recibira automaticamente todos estos cursos."
+          message="Seleccione una clase y uno de los cursos disponibles."
+          description="Posteriormente, cuando la clase sea asignada a un docente, recibira automaticamente todos sus cursos."
           style={{
             marginBottom:
               20,
@@ -615,7 +833,9 @@ export default function CursosClases() {
               >
                 <Select
                   size="large"
-                  placeholder="Ejemplo: Tercero Basico A - 2026"
+                  placeholder="Seleccione la clase"
+                  showSearch
+                  optionFilterProp="label"
                   options={
                     clases
                       .filter(
@@ -664,6 +884,8 @@ export default function CursosClases() {
                 <Select
                   size="large"
                   placeholder="Seleccione el curso"
+                  showSearch
+                  optionFilterProp="label"
                   options={
                     cursosDisponibles.map(
                       (
@@ -673,7 +895,7 @@ export default function CursosClases() {
                           curso.id,
 
                         label:
-                          curso.nombre,
+                          `${curso.codigo} - ${curso.nombre}`,
                       }),
                     )
                   }
@@ -708,6 +930,10 @@ export default function CursosClases() {
           dataSource={
             relaciones
           }
+          locale={{
+            emptyText:
+              'Todavia no hay cursos asignados a clases.',
+          }}
           pagination={{
             pageSize:
               10,
