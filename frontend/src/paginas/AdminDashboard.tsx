@@ -1,4 +1,5 @@
 import {
+  ApartmentOutlined,
   BookOutlined,
   LogoutOutlined,
   ReadOutlined,
@@ -94,11 +95,7 @@ export default function AdminDashboard() {
           16,
         ]}
       >
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
@@ -117,17 +114,12 @@ export default function AdminDashboard() {
             </Title>
 
             <Text type="secondary">
-              Registrar y administrar
-              estudiantes.
+              Registrar y administrar estudiantes.
             </Text>
           </Card>
         </Col>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
@@ -146,17 +138,12 @@ export default function AdminDashboard() {
             </Title>
 
             <Text type="secondary">
-              Gestionar docentes del
-              establecimiento.
+              Gestionar docentes del establecimiento.
             </Text>
           </Card>
         </Col>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
@@ -171,21 +158,16 @@ export default function AdminDashboard() {
             />
 
             <Title level={4}>
-              Secciones
+              Clases
             </Title>
 
             <Text type="secondary">
-              Administrar grados y
-              secciones.
+              Administrar grados, secciones y ciclos.
             </Text>
           </Card>
         </Col>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
@@ -204,46 +186,36 @@ export default function AdminDashboard() {
             </Title>
 
             <Text type="secondary">
-              Administrar el catalogo
-              general de cursos.
+              Crear y administrar los cursos.
             </Text>
           </Card>
         </Col>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
             onClick={() =>
               navigate(
-                '/admin/inscripciones',
+                '/admin/cursos-clases',
               )
             }
           >
-            <UsergroupAddOutlined
+            <ApartmentOutlined
               className="dashboard-icono"
             />
 
             <Title level={4}>
-              Inscripciones
+              Cursos por clase
             </Title>
 
             <Text type="secondary">
-              Asignar estudiantes a
-              grados y secciones.
+              Definir los cursos que pertenecen a cada clase.
             </Text>
           </Card>
         </Col>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             className="dashboard-card"
@@ -262,8 +234,31 @@ export default function AdminDashboard() {
             </Title>
 
             <Text type="secondary">
-              Asignar cursos y secciones
-              a los docentes.
+              Asignar clases completas a los docentes.
+            </Text>
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} lg={8}>
+          <Card
+            hoverable
+            className="dashboard-card"
+            onClick={() =>
+              navigate(
+                '/admin/inscripciones',
+              )
+            }
+          >
+            <UsergroupAddOutlined
+              className="dashboard-icono"
+            />
+
+            <Title level={4}>
+              Inscripciones
+            </Title>
+
+            <Text type="secondary">
+              Administrar estudiantes inscritos en clases.
             </Text>
           </Card>
         </Col>

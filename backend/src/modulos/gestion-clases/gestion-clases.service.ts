@@ -18,6 +18,10 @@ import {
   AsociarCursoClaseDto,
 } from './dto/asociar-curso-clase.dto';
 
+import {
+  AsignarDocenteClaseDto,
+} from './dto/asignar-docente-clase.dto';
+
 @Injectable()
 export class GestionClasesService {
   constructor(
@@ -29,19 +33,23 @@ export class GestionClasesService {
   ) {}
 
   // =====================================
-  // ADMIN - CONFIGURACION
+  // ADMIN - CONFIGURACION CURSOS / CLASES
   // =====================================
 
   async obtenerConfiguracionCursos() {
     return this.repository.obtenerConfiguracionCursos();
   }
 
+  // =====================================
+  // ADMIN - DOCENTES / CLASES
+  // =====================================
+
   async obtenerDocentesClases() {
     return this.repository.obtenerDocentesClases();
   }
 
   // =====================================
-  // ADMIN - ASOCIAR CURSO A CLASE
+  // ADMIN - ASOCIAR CURSO A UNA CLASE
   // =====================================
 
   async asociarCursoClase(
@@ -96,8 +104,10 @@ export class GestionClasesService {
           );
         }
 
-        // Un curso solamente puede
-        // pertenecer a una clase activa.
+        // =================================
+        // UN CURSO SOLO PUEDE PERTENECER
+        // A UNA CLASE ACTIVA
+        // =================================
 
         const relacionActiva =
           await this.repository.buscarCursoEnClaseActiva(
@@ -105,7 +115,9 @@ export class GestionClasesService {
             cliente,
           );
 
-        if (relacionActiva) {
+        if (
+          relacionActiva
+        ) {
           if (
             Number(
               relacionActiva.seccion_id,
@@ -134,6 +146,10 @@ export class GestionClasesService {
         let relacionId:
           number;
 
+        // Si estuvo anteriormente
+        // en esta clase, simplemente
+        // reactivamos la relacion.
+
         if (
           relacionExistente
         ) {
@@ -150,7 +166,7 @@ export class GestionClasesService {
               relacionExistente.id,
             );
         } else {
-          const nuevaRelacion =
+          const relacion =
             await this.repository.crearCursoClase(
               datos.curso_id,
               datos.seccion_id,
@@ -159,14 +175,15 @@ export class GestionClasesService {
 
           relacionId =
             Number(
-              nuevaRelacion.id,
+              relacion.id,
             );
         }
 
-        // Si ya existen maestros
-        // asignados a la clase, agregar
-        // también este curso a sus
-        // relaciones internas.
+        // =================================
+        // SI LA CLASE YA TIENE DOCENTES,
+        // EL NUEVO CURSO SE AGREGA
+        // AUTOMATICAMENTE A ELLOS.
+        // =================================
 
         const docentes =
           await this.repository.obtenerDocentesActivosPorClase(
@@ -196,8 +213,8 @@ export class GestionClasesService {
   }
 
   // =====================================
-  // ADMIN - CURSO DE CLASE
-  // ACTIVAR / DESACTIVAR
+  // ADMIN - ACTIVAR / DESACTIVAR
+  // CURSO DE UNA CLASE
   // =====================================
 
   async cambiarEstadoCursoClase(
@@ -232,12 +249,20 @@ export class GestionClasesService {
           );
         }
 
+        // =================================
+        // QUITAR CURSO
+        // =================================
+
         if (!activo) {
           await this.repository.cambiarEstadoCursoClase(
             id,
             false,
             cliente,
           );
+
+          // También desactivamos las
+          // asignaciones internas del
+          // curso para los docentes.
 
           await this.repository.desactivarAsignacionesCursoClase(
             Number(
@@ -255,13 +280,17 @@ export class GestionClasesService {
           );
         }
 
+        // =================================
+        // REACTIVAR CURSO
+        // =================================
+
         if (
           !Boolean(
             relacion.curso_activo,
           )
         ) {
           throw new BadRequestException(
-            'No se puede reactivar porque el curso se encuentra inactivo.',
+            'No puede reactivar esta asignacion porque el curso esta inactivo.',
           );
         }
 
@@ -271,7 +300,7 @@ export class GestionClasesService {
           )
         ) {
           throw new BadRequestException(
-            'No se puede reactivar porque la clase se encuentra inactiva.',
+            'No puede reactivar esta asignacion porque la clase esta inactiva.',
           );
         }
 
@@ -291,7 +320,7 @@ export class GestionClasesService {
             Number(id)
         ) {
           throw new ConflictException(
-            'El curso ya pertenece actualmente a otra clase.',
+            'Este curso actualmente pertenece a otra clase.',
           );
         }
 
@@ -300,6 +329,10 @@ export class GestionClasesService {
           true,
           cliente,
         );
+
+        // Agregamos nuevamente el
+        // curso a todos los profesores
+        // de la clase.
 
         const docentes =
           await this.repository.obtenerDocentesActivosPorClase(
@@ -335,56 +368,24 @@ export class GestionClasesService {
   }
 
   // =====================================
-  // DOCENTE - MIS CLASES
+  // ADMIN - ASIGNAR CLASE A DOCENTE
   // =====================================
 
-  async obtenerMisClases(
-    docenteId: number,
+  async asignarClaseDocente(
+    datos:
+      AsignarDocenteClaseDto,
   ) {
-    this.validarDocenteId(
-      docenteId,
-    );
-
-    return this.repository.obtenerMisClases(
-      docenteId,
-    );
-  }
-
-  // =====================================
-  // DOCENTE - CLASES DISPONIBLES
-  // =====================================
-
-  async obtenerClasesDisponibles(
-    docenteId: number,
-  ) {
-    this.validarDocenteId(
-      docenteId,
-    );
-
-    return this.repository.obtenerClasesDisponibles(
-      docenteId,
-    );
-  }
-
-  // =====================================
-  // DOCENTE - AUTOASIGNARSE CLASE
-  // =====================================
-
-  async autoasignarClase(
-    docenteId: number,
-    seccionId: number,
-  ) {
-    this.validarDocenteId(
-      docenteId,
-    );
-
     return this.baseDatosService.ejecutarTransaccion(
       async (
         cliente,
       ) => {
+        // =================================
+        // VALIDAR DOCENTE
+        // =================================
+
         const docente =
           await this.repository.buscarDocentePorId(
-            docenteId,
+            datos.docente_id,
             cliente,
           );
 
@@ -403,13 +404,17 @@ export class GestionClasesService {
           )
         ) {
           throw new BadRequestException(
-            'El usuario docente se encuentra inactivo.',
+            'El docente se encuentra inactivo.',
           );
         }
 
+        // =================================
+        // VALIDAR CLASE
+        // =================================
+
         const clase =
           await this.repository.buscarSeccionPorId(
-            seccionId,
+            datos.seccion_id,
             cliente,
           );
 
@@ -429,9 +434,13 @@ export class GestionClasesService {
           );
         }
 
+        // =================================
+        // LA CLASE DEBE TENER CURSOS
+        // =================================
+
         const cursos =
           await this.repository.obtenerCursosActivosPorClase(
-            seccionId,
+            datos.seccion_id,
             cliente,
           );
 
@@ -439,16 +448,23 @@ export class GestionClasesService {
           cursos.length === 0
         ) {
           throw new BadRequestException(
-            'Esta clase aun no tiene cursos configurados por el administrador.',
+            'La clase no tiene cursos asignados. Configure primero los cursos de esta clase.',
           );
         }
 
+        // =================================
+        // VALIDAR RELACION DOCENTE-CLASE
+        // =================================
+
         const existente =
           await this.repository.buscarDocenteClase(
-            docenteId,
-            seccionId,
+            datos.docente_id,
+            datos.seccion_id,
             cliente,
           );
+
+        let relacionId:
+          number;
 
         if (
           existente &&
@@ -457,7 +473,7 @@ export class GestionClasesService {
           )
         ) {
           throw new ConflictException(
-            'Ya tiene asignada esta clase.',
+            'El docente ya tiene asignada esta clase.',
           );
         }
 
@@ -469,59 +485,54 @@ export class GestionClasesService {
             true,
             cliente,
           );
+
+          relacionId =
+            Number(
+              existente.id,
+            );
         } else {
-          await this.repository.crearDocenteClase(
-            docenteId,
-            seccionId,
-            cliente,
-          );
+          const relacion =
+            await this.repository.crearDocenteClase(
+              datos.docente_id,
+              datos.seccion_id,
+              cliente,
+            );
+
+          relacionId =
+            Number(
+              relacion.id,
+            );
         }
 
-        // Crear una asignacion interna
-        // por cada curso de la clase.
-        //
-        // Esto permite conservar el
-        // funcionamiento actual de
-        // sesiones y asistencias.
+        // =================================
+        // ASIGNAR AUTOMATICAMENTE TODOS
+        // LOS CURSOS DE LA CLASE
+        // =================================
 
         for (
           const curso of cursos
         ) {
           await this.repository.sincronizarAsignacion(
-            docenteId,
+            datos.docente_id,
             Number(
               curso.id,
             ),
-            seccionId,
+            datos.seccion_id,
             cliente,
           );
         }
 
-        return {
-          docente_id:
-            docenteId,
-
-          seccion_id:
-            seccionId,
-
-          grado:
-            clase.grado,
-
-          seccion:
-            clase.nombre,
-
-          anio_academico:
-            clase.anio_academico,
-
-          cursos,
-        };
+        return this.repository.buscarDocenteClasePorId(
+          relacionId,
+          cliente,
+        );
       },
     );
   }
 
   // =====================================
   // ADMIN - DESASIGNAR / REACTIVAR
-  // CLASE DE DOCENTE
+  // CLASE DEL DOCENTE
   // =====================================
 
   async cambiarEstadoDocenteClase(
@@ -552,9 +563,13 @@ export class GestionClasesService {
           throw new BadRequestException(
             activo
               ? 'El docente ya tiene activa esta clase.'
-              : 'El docente ya se encuentra desasignado de esta clase.',
+              : 'La clase ya se encuentra desasignada del docente.',
           );
         }
+
+        // =================================
+        // DESASIGNAR
+        // =================================
 
         if (!activo) {
           await this.repository.cambiarEstadoDocenteClase(
@@ -579,6 +594,10 @@ export class GestionClasesService {
           );
         }
 
+        // =================================
+        // REACTIVAR
+        // =================================
+
         if (
           !Boolean(
             relacion.docente_activo,
@@ -588,7 +607,7 @@ export class GestionClasesService {
           )
         ) {
           throw new BadRequestException(
-            'No se puede reactivar porque el docente se encuentra inactivo.',
+            'No se puede reactivar porque el docente esta inactivo.',
           );
         }
 
@@ -598,7 +617,7 @@ export class GestionClasesService {
           )
         ) {
           throw new BadRequestException(
-            'No se puede reactivar porque la clase se encuentra inactiva.',
+            'No se puede reactivar porque la clase esta inactiva.',
           );
         }
 
@@ -650,10 +669,11 @@ export class GestionClasesService {
   }
 
   // =====================================
-  // VALIDACION
+  // DOCENTE - MIS CLASES
+  // SOLO CONSULTA
   // =====================================
 
-  private validarDocenteId(
+  async obtenerMisClases(
     docenteId: number,
   ) {
     if (
@@ -666,5 +686,9 @@ export class GestionClasesService {
         'No se pudo identificar al docente.',
       );
     }
+
+    return this.repository.obtenerMisClases(
+      docenteId,
+    );
   }
 }

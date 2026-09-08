@@ -19,6 +19,10 @@ import {
 } from './dto/asociar-curso-clase.dto';
 
 import {
+  AsignarDocenteClaseDto,
+} from './dto/asignar-docente-clase.dto';
+
+import {
   AutenticacionGuard,
 } from '../autenticacion/guards/autenticacion.guard';
 
@@ -49,6 +53,7 @@ export class GestionClasesController {
 
   // =====================================
   // DOCENTE - MIS CLASES
+  // SOLO CONSULTA
   // =====================================
 
   @Get('mis-clases')
@@ -79,77 +84,7 @@ export class GestionClasesController {
   }
 
   // =====================================
-  // DOCENTE - CLASES DISPONIBLES
-  // =====================================
-
-  @Get(
-    'clases-disponibles',
-  )
-  @Roles('DOCENTE')
-  async obtenerClasesDisponibles(
-    @Req()
-    request: {
-      usuario:
-        UsuarioAutenticado;
-    },
-  ) {
-    const datos =
-      await this.gestionClasesService.obtenerClasesDisponibles(
-        Number(
-          request.usuario.docente_id,
-        ),
-      );
-
-    return {
-      mensaje:
-        'Clases disponibles obtenidas correctamente',
-
-      total:
-        datos.length,
-
-      datos,
-    };
-  }
-
-  // =====================================
-  // DOCENTE - AUTOASIGNARSE CLASE
-  // =====================================
-
-  @Post(
-    'autoasignar/:seccionId',
-  )
-  @Roles('DOCENTE')
-  async autoasignarClase(
-    @Req()
-    request: {
-      usuario:
-        UsuarioAutenticado;
-    },
-
-    @Param(
-      'seccionId',
-      ParseIntPipe,
-    )
-    seccionId: number,
-  ) {
-    const datos =
-      await this.gestionClasesService.autoasignarClase(
-        Number(
-          request.usuario.docente_id,
-        ),
-        seccionId,
-      );
-
-    return {
-      mensaje:
-        'Clase asignada correctamente',
-
-      datos,
-    };
-  }
-
-  // =====================================
-  // ADMIN - CONFIGURACION CURSOS
+  // ADMIN - CURSOS POR CLASE
   // =====================================
 
   @Get(
@@ -170,10 +105,6 @@ export class GestionClasesController {
       datos,
     };
   }
-
-  // =====================================
-  // ADMIN - ASOCIAR CURSO A CLASE
-  // =====================================
 
   @Post(
     'cursos-clases',
@@ -198,10 +129,6 @@ export class GestionClasesController {
     };
   }
 
-  // =====================================
-  // ADMIN - QUITAR CURSO
-  // =====================================
-
   @Patch(
     'cursos-clases/:id/desactivar',
   )
@@ -221,15 +148,11 @@ export class GestionClasesController {
 
     return {
       mensaje:
-        'Curso desasignado de la clase correctamente',
+        'Curso quitado de la clase correctamente',
 
       datos,
     };
   }
-
-  // =====================================
-  // ADMIN - REACTIVAR CURSO
-  // =====================================
 
   @Patch(
     'cursos-clases/:id/activar',
@@ -250,14 +173,14 @@ export class GestionClasesController {
 
     return {
       mensaje:
-        'Curso asignado nuevamente a la clase',
+        'Curso reactivado en la clase correctamente',
 
       datos,
     };
   }
 
   // =====================================
-  // ADMIN - DOCENTES / CLASES
+  // ADMIN - CLASES DE DOCENTES
   // =====================================
 
   @Get(
@@ -270,7 +193,7 @@ export class GestionClasesController {
 
     return {
       mensaje:
-        'Clases de los docentes obtenidas correctamente',
+        'Asignaciones de clases obtenidas correctamente',
 
       total:
         datos.length,
@@ -279,9 +202,28 @@ export class GestionClasesController {
     };
   }
 
-  // =====================================
-  // ADMIN - DESASIGNAR CLASE DOCENTE
-  // =====================================
+  @Post(
+    'docentes-clases',
+  )
+  @Roles('ADMIN')
+  async asignarClaseDocente(
+    @Body()
+    datos:
+      AsignarDocenteClaseDto,
+  ) {
+    const relacion =
+      await this.gestionClasesService.asignarClaseDocente(
+        datos,
+      );
+
+    return {
+      mensaje:
+        'Clase asignada al docente correctamente',
+
+      datos:
+        relacion,
+    };
+  }
 
   @Patch(
     'docentes-clases/:id/desactivar',
@@ -308,15 +250,11 @@ export class GestionClasesController {
     };
   }
 
-  // =====================================
-  // ADMIN - REACTIVAR CLASE DOCENTE
-  // =====================================
-
   @Patch(
     'docentes-clases/:id/activar',
   )
   @Roles('ADMIN')
-  async activarClaseDocente(
+  async reactivarClaseDocente(
     @Param(
       'id',
       ParseIntPipe,
@@ -331,7 +269,7 @@ export class GestionClasesController {
 
     return {
       mensaje:
-        'Clase asignada nuevamente al docente',
+        'Clase reactivada para el docente correctamente',
 
       datos,
     };

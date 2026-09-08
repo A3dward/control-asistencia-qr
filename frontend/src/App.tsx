@@ -24,6 +24,8 @@ import Secciones from './paginas/Secciones';
 
 import Cursos from './paginas/Cursos';
 
+import CursosClases from './paginas/CursosClases';
+
 import Inscripciones from './paginas/Inscripciones';
 
 import Asignaciones from './paginas/Asignaciones';
@@ -87,6 +89,13 @@ function App() {
         />
 
         <Route
+          path="/admin/cursos-clases"
+          element={
+            <CursosClases />
+          }
+        />
+
+        <Route
           path="/admin/inscripciones"
           element={
             <Inscripciones />
@@ -134,8 +143,6 @@ function App() {
         />
       </Route>
 
-      {/* INICIO */}
-
       <Route
         path="/"
         element={
@@ -145,8 +152,6 @@ function App() {
           />
         }
       />
-
-      {/* RUTA NO ENCONTRADA */}
 
       <Route
         path="*"

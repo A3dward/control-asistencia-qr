@@ -1,7 +1,8 @@
 import {
   ArrowLeftOutlined,
+  BookOutlined,
   PoweroffOutlined,
-  SolutionOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -26,6 +27,7 @@ import type {
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -40,42 +42,35 @@ const {
   Text,
 } = Typography;
 
-interface Docente {
+interface Curso {
   id: number;
-
-  codigo_docente: string;
-
-  nombre_completo: string;
-
+  codigo: string;
+  nombre: string;
   activo: boolean;
 }
 
 interface Clase {
   id: number;
-
   nombre: string;
-
   grado: string;
-
   anio_academico: number;
-
   activo: boolean;
 }
 
-interface AsignacionClase {
+interface CursoClase {
   id: number;
 
-  docente_id: number;
+  curso_id: number;
 
   seccion_id: number;
 
   activo: boolean;
 
-  codigo_docente: string;
+  codigo_curso: string;
 
-  docente: string;
+  curso: string;
 
-  correo: string;
+  curso_activo: boolean;
 
   seccion: string;
 
@@ -87,12 +82,12 @@ interface AsignacionClase {
 }
 
 interface Formulario {
-  docente_id: number;
+  curso_id: number;
 
   seccion_id: number;
 }
 
-export default function Asignaciones() {
+export default function CursosClases() {
   const navigate =
     useNavigate();
 
@@ -102,10 +97,10 @@ export default function Asignaciones() {
     Form.useForm<Formulario>();
 
   const [
-    docentes,
-    setDocentes,
+    cursos,
+    setCursos,
   ] =
-    useState<Docente[]>([]);
+    useState<Curso[]>([]);
 
   const [
     clases,
@@ -114,10 +109,10 @@ export default function Asignaciones() {
     useState<Clase[]>([]);
 
   const [
-    asignaciones,
-    setAsignaciones,
+    relaciones,
+    setRelaciones,
   ] =
-    useState<AsignacionClase[]>([]);
+    useState<CursoClase[]>([]);
 
   const [
     cargando,
@@ -191,13 +186,13 @@ export default function Asignaciones() {
         );
 
         const [
-          respuestaDocentes,
+          respuestaCursos,
           respuestaClases,
-          respuestaAsignaciones,
+          respuestaRelaciones,
         ] =
           await Promise.all([
             api.get(
-              '/docentes',
+              '/cursos',
             ),
 
             api.get(
@@ -205,12 +200,12 @@ export default function Asignaciones() {
             ),
 
             api.get(
-              '/gestion-clases/docentes-clases',
+              '/gestion-clases/configuracion-cursos',
             ),
           ]);
 
-        setDocentes(
-          respuestaDocentes
+        setCursos(
+          respuestaCursos
             .data
             .datos ?? [],
         );
@@ -221,8 +216,8 @@ export default function Asignaciones() {
             .datos ?? [],
         );
 
-        setAsignaciones(
-          respuestaAsignaciones
+        setRelaciones(
+          respuestaRelaciones
             .data
             .datos ?? [],
         );
@@ -232,7 +227,7 @@ export default function Asignaciones() {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible cargar las asignaciones.',
+            'No fue posible cargar la configuracion.',
           ),
         );
       } finally {
@@ -249,7 +244,54 @@ export default function Asignaciones() {
     [],
   );
 
-  const asignarClase =
+  // Los cursos activos que ya pertenecen
+  // a otra clase no aparecen nuevamente.
+
+  const cursosDisponibles =
+    useMemo(
+      () => {
+        const asignados =
+          new Set(
+            relaciones
+              .filter(
+                (
+                  relacion,
+                ) =>
+                  Boolean(
+                    relacion.activo,
+                  ),
+              )
+              .map(
+                (
+                  relacion,
+                ) =>
+                  Number(
+                    relacion.curso_id,
+                  ),
+              ),
+          );
+
+        return cursos.filter(
+          (
+            curso,
+          ) =>
+            Boolean(
+              curso.activo,
+            ) &&
+            !asignados.has(
+              Number(
+                curso.id,
+              ),
+            ),
+        );
+      },
+      [
+        cursos,
+        relaciones,
+      ],
+    );
+
+  const asignarCurso =
     async (
       valores:
         Formulario,
@@ -260,11 +302,11 @@ export default function Asignaciones() {
         );
 
         await api.post(
-          '/gestion-clases/docentes-clases',
+          '/gestion-clases/cursos-clases',
           {
-            docente_id:
+            curso_id:
               Number(
-                valores.docente_id,
+                valores.curso_id,
               ),
 
             seccion_id:
@@ -275,7 +317,7 @@ export default function Asignaciones() {
         );
 
         message.success(
-          'Clase asignada al docente correctamente.',
+          'Curso asignado a la clase correctamente.',
         );
 
         form.resetFields();
@@ -287,7 +329,7 @@ export default function Asignaciones() {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible asignar la clase.',
+            'No fue posible asignar el curso.',
           ),
         );
       } finally {
@@ -299,23 +341,23 @@ export default function Asignaciones() {
 
   const cambiarEstado =
     async (
-      asignacion:
-        AsignacionClase,
+      relacion:
+        CursoClase,
     ) => {
       try {
         const accion =
-          asignacion.activo
+          relacion.activo
             ? 'desactivar'
             : 'activar';
 
         await api.patch(
-          `/gestion-clases/docentes-clases/${asignacion.id}/${accion}`,
+          `/gestion-clases/cursos-clases/${relacion.id}/${accion}`,
         );
 
         message.success(
-          asignacion.activo
-            ? 'Clase desasignada del docente.'
-            : 'Clase reactivada para el docente.',
+          relacion.activo
+            ? 'Curso quitado de la clase.'
+            : 'Curso reactivado en la clase.',
         );
 
         await cargarDatos();
@@ -332,39 +374,8 @@ export default function Asignaciones() {
     };
 
   const columnas:
-    TableColumnsType<AsignacionClase> =
+    TableColumnsType<CursoClase> =
     [
-      {
-        title:
-          'Docente',
-
-        key:
-          'docente',
-
-        render: (
-          _,
-          asignacion,
-        ) => (
-          <div>
-            <strong>
-              {
-                asignacion.docente
-              }
-            </strong>
-
-            <br />
-
-            <Text
-              type="secondary"
-            >
-              {
-                asignacion.codigo_docente
-              }
-            </Text>
-          </div>
-        ),
-      },
-
       {
         title:
           'Clase',
@@ -374,18 +385,49 @@ export default function Asignaciones() {
 
         render: (
           _,
-          asignacion,
+          relacion,
         ) =>
           nombreClase({
             grado:
-              asignacion.grado,
+              relacion.grado,
 
             seccion:
-              asignacion.seccion,
+              relacion.seccion,
 
             anio_academico:
-              asignacion.anio_academico,
+              relacion.anio_academico,
           }),
+      },
+
+      {
+        title:
+          'Curso',
+
+        key:
+          'curso',
+
+        render: (
+          _,
+          relacion,
+        ) => (
+          <div>
+            <strong>
+              {
+                relacion.curso
+              }
+            </strong>
+
+            <br />
+
+            <Text
+              type="secondary"
+            >
+              {
+                relacion.codigo_curso
+              }
+            </Text>
+          </div>
+        ),
       },
 
       {
@@ -397,18 +439,18 @@ export default function Asignaciones() {
 
         render: (
           _,
-          asignacion,
+          relacion,
         ) => (
           <Tag
             color={
-              asignacion.activo
+              relacion.activo
                 ? 'green'
                 : 'red'
             }
           >
-            {asignacion.activo
-              ? 'ASIGNADA'
-              : 'DESASIGNADA'}
+            {relacion.activo
+              ? 'ASIGNADO'
+              : 'DESASIGNADO'}
           </Tag>
         ),
       },
@@ -421,37 +463,37 @@ export default function Asignaciones() {
           'acciones',
 
         width:
-          180,
+          170,
 
         render: (
           _,
-          asignacion,
+          relacion,
         ) => (
           <Popconfirm
             title={
-              asignacion.activo
-                ? 'Desasignar clase'
-                : 'Reactivar clase'
+              relacion.activo
+                ? 'Quitar curso'
+                : 'Reactivar curso'
             }
             description={
-              asignacion.activo
-                ? 'El docente dejara de tener esta clase. ¿Continuar?'
-                : '¿Desea devolver esta clase al docente?'
+              relacion.activo
+                ? 'El curso dejara de formar parte de esta clase. ¿Continuar?'
+                : '¿Desea volver a agregar este curso a la clase?'
             }
             okText="Si"
             cancelText="No"
             onConfirm={() =>
               cambiarEstado(
-                asignacion,
+                relacion,
               )
             }
           >
             <Button
               danger={
-                asignacion.activo
+                relacion.activo
               }
               type={
-                asignacion.activo
+                relacion.activo
                   ? 'default'
                   : 'primary'
               }
@@ -459,8 +501,8 @@ export default function Asignaciones() {
                 <PoweroffOutlined />
               }
             >
-              {asignacion.activo
-                ? 'Desasignar'
+              {relacion.activo
+                ? 'Quitar'
                 : 'Reactivar'}
             </Button>
           </Popconfirm>
@@ -492,24 +534,35 @@ export default function Asignaciones() {
           </Button>
 
           <Title level={2}>
-            Asignaciones
+            Cursos por clase
           </Title>
 
           <Text
             type="secondary"
           >
-            Asigne una clase completa
-            a cada docente.
+            Defina los cursos que
+            pertenecen a cada clase.
           </Text>
         </div>
+
+        <Button
+          icon={
+            <ReloadOutlined />
+          }
+          onClick={
+            cargarDatos
+          }
+        >
+          Actualizar
+        </Button>
       </div>
 
       <Card
         title={
           <Space>
-            <SolutionOutlined />
+            <BookOutlined />
 
-            Asignar clase a docente
+            Asignar curso a una clase
           </Space>
         }
         style={{
@@ -520,8 +573,8 @@ export default function Asignaciones() {
         <Alert
           type="info"
           showIcon
-          message="Solo debe seleccionar el docente y la clase."
-          description="El docente recibira automaticamente todos los cursos configurados para esa clase."
+          message="Seleccione un curso y la clase a la que pertenece."
+          description="Cuando posteriormente asigne esta clase a un docente, recibira automaticamente todos estos cursos."
           style={{
             marginBottom:
               20,
@@ -534,7 +587,7 @@ export default function Asignaciones() {
           }
           layout="vertical"
           onFinish={
-            asignarClase
+            asignarCurso
           }
         >
           <Row
@@ -543,52 +596,6 @@ export default function Asignaciones() {
               0,
             ]}
           >
-            <Col
-              xs={24}
-              md={12}
-            >
-              <Form.Item
-                name="docente_id"
-                label="Docente"
-                rules={[
-                  {
-                    required:
-                      true,
-
-                    message:
-                      'Seleccione un docente.',
-                  },
-                ]}
-              >
-                <Select
-                  size="large"
-                  placeholder="Seleccione el docente"
-                  options={
-                    docentes
-                      .filter(
-                        (
-                          docente,
-                        ) =>
-                          Boolean(
-                            docente.activo,
-                          ),
-                      )
-                      .map(
-                        (
-                          docente,
-                        ) => ({
-                          value:
-                            docente.id,
-
-                          label:
-                            `${docente.codigo_docente} - ${docente.nombre_completo}`,
-                        }),
-                      )
-                  }
-                />
-              </Form.Item>
-            </Col>
-
             <Col
               xs={24}
               md={12}
@@ -608,7 +615,7 @@ export default function Asignaciones() {
               >
                 <Select
                   size="large"
-                  placeholder="Seleccione la clase"
+                  placeholder="Ejemplo: Tercero Basico A - 2026"
                   options={
                     clases
                       .filter(
@@ -636,6 +643,43 @@ export default function Asignaciones() {
                 />
               </Form.Item>
             </Col>
+
+            <Col
+              xs={24}
+              md={12}
+            >
+              <Form.Item
+                name="curso_id"
+                label="Curso"
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Seleccione un curso.',
+                  },
+                ]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Seleccione el curso"
+                  options={
+                    cursosDisponibles.map(
+                      (
+                        curso,
+                      ) => ({
+                        value:
+                          curso.id,
+
+                        label:
+                          curso.nombre,
+                      }),
+                    )
+                  }
+                />
+              </Form.Item>
+            </Col>
           </Row>
 
           <Button
@@ -645,13 +689,13 @@ export default function Asignaciones() {
               guardando
             }
           >
-            Asignar clase
+            Asignar curso a clase
           </Button>
         </Form>
       </Card>
 
       <Card
-        title="Clases asignadas a docentes"
+        title="Cursos asignados a las clases"
       >
         <Table
           rowKey="id"
@@ -662,7 +706,7 @@ export default function Asignaciones() {
             columnas
           }
           dataSource={
-            asignaciones
+            relaciones
           }
           pagination={{
             pageSize:
