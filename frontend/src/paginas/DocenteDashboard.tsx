@@ -107,9 +107,8 @@ export default function DocenteDashboard() {
             <Text
               type="secondary"
             >
-              Consulte sus clases
-              y asigne cursos y
-              secciones.
+              Verificar Clases
+              asignadas
             </Text>
 
             <div
@@ -206,7 +205,7 @@ export default function DocenteDashboard() {
                 block
                 disabled
               >
-                Proxima etapa
+                ---
               </Button>
             </div>
           </Card>
