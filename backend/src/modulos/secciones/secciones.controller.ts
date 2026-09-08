@@ -44,6 +44,10 @@ export class SeccionesController {
       SeccionesService,
   ) {}
 
+  // =====================================
+  // ADMIN / DOCENTE - CONSULTAR
+  // =====================================
+
   @Get()
   @Roles(
     'ADMIN',
@@ -55,7 +59,7 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Secciones obtenidas correctamente',
+        'Clases obtenidas correctamente',
 
       total:
         secciones.length,
@@ -65,8 +69,15 @@ export class SeccionesController {
     };
   }
 
+  // =====================================
+  // ADMIN / DOCENTE - CREAR CLASE
+  // =====================================
+
   @Post()
-  @Roles('ADMIN')
+  @Roles(
+    'ADMIN',
+    'DOCENTE',
+  )
   async crear(
     @Body()
     datos:
@@ -79,12 +90,16 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Seccion registrada correctamente',
+        'Clase registrada correctamente',
 
       datos:
         seccion,
     };
   }
+
+  // =====================================
+  // CONSULTAR ID
+  // =====================================
 
   @Get(':id')
   @Roles(
@@ -105,12 +120,16 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Seccion obtenida correctamente',
+        'Clase obtenida correctamente',
 
       datos:
         seccion,
     };
   }
+
+  // =====================================
+  // ADMIN - MODIFICAR
+  // =====================================
 
   @Patch(':id')
   @Roles('ADMIN')
@@ -133,7 +152,7 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Seccion actualizada correctamente',
+        'Clase actualizada correctamente',
 
       datos:
         seccion,
@@ -157,7 +176,7 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Seccion desactivada correctamente',
+        'Clase desactivada correctamente',
 
       datos:
         seccion,
@@ -181,7 +200,7 @@ export class SeccionesController {
 
     return {
       mensaje:
-        'Seccion activada correctamente',
+        'Clase activada correctamente',
 
       datos:
         seccion,

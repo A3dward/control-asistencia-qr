@@ -1,14 +1,16 @@
 import {
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
 
 export class CrearCursoDto {
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
   @MaxLength(30)
-  codigo: string;
+  codigo?: string;
 
   @IsString()
   @IsNotEmpty()

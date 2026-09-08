@@ -8,6 +8,7 @@ import {
 export class CrearEstudianteDto {
   @IsOptional()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(30)
   codigo_estudiante?: string;
 

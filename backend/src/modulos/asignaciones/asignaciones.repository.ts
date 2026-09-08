@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+} from '@nestjs/common';
 
-import { BaseDatosService } from '../../base-datos/base-datos.service';
+import {
+  BaseDatosService,
+} from '../../base-datos/base-datos.service';
 
 @Injectable()
 export class AsignacionesRepository {
@@ -231,7 +235,7 @@ export class AsignacionesRepository {
   }
 
   // =====================================
-  // BUSCAR ASIGNACION EXISTENTE
+  // BUSCAR ASIGNACION EXACTA
   // =====================================
 
   async buscarAsignacion(
@@ -272,7 +276,50 @@ export class AsignacionesRepository {
   }
 
   // =====================================
-  // OBTENER POR DOCENTE
+  // VALIDAR CURSO EN OTRA CLASE
+  // =====================================
+
+  async buscarCursoEnOtraSeccion(
+    curso_id: number,
+    seccion_id: number,
+  ) {
+    const resultado =
+      await this.baseDatosService.ejecutarConsulta(
+        `
+        SELECT
+          ad.id,
+          ad.curso_id,
+          ad.seccion_id,
+          ad.activo,
+
+          s.nombre AS seccion,
+          s.grado,
+          s.anio_academico
+
+        FROM asignaciones_docentes ad
+
+        INNER JOIN secciones s
+          ON s.id = ad.seccion_id
+
+        WHERE ad.curso_id = @curso_id
+          AND ad.seccion_id <> @seccion_id
+
+        LIMIT 1
+        `,
+        {
+          curso_id,
+          seccion_id,
+        },
+      );
+
+    return (
+      resultado.recordset[0] ??
+      null
+    );
+  }
+
+  // =====================================
+  // POR DOCENTE
   // =====================================
 
   async obtenerPorDocente(
@@ -319,7 +366,7 @@ export class AsignacionesRepository {
   }
 
   // =====================================
-  // OBTENER POR SECCION
+  // POR SECCION
   // =====================================
 
   async obtenerPorSeccion(
@@ -412,7 +459,7 @@ export class AsignacionesRepository {
   }
 
   // =====================================
-  // ACTIVAR / DESACTIVAR
+  // ESTADO
   // =====================================
 
   async cambiarEstado(

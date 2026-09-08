@@ -44,6 +44,10 @@ export class CursosController {
       CursosService,
   ) {}
 
+  // =====================================
+  // ADMIN / DOCENTE - CONSULTAR
+  // =====================================
+
   @Get()
   @Roles(
     'ADMIN',
@@ -65,11 +69,19 @@ export class CursosController {
     };
   }
 
+  // =====================================
+  // ADMIN / DOCENTE - CREAR
+  // =====================================
+
   @Post()
-  @Roles('ADMIN')
+  @Roles(
+    'ADMIN',
+    'DOCENTE',
+  )
   async crear(
     @Body()
-    datos: CrearCursoDto,
+    datos:
+      CrearCursoDto,
   ) {
     const curso =
       await this.cursosService.crear(
@@ -84,6 +96,10 @@ export class CursosController {
         curso,
     };
   }
+
+  // =====================================
+  // ADMIN / DOCENTE - CONSULTAR ID
+  // =====================================
 
   @Get(':id')
   @Roles(
@@ -110,6 +126,10 @@ export class CursosController {
         curso,
     };
   }
+
+  // =====================================
+  // ADMIN - MODIFICAR
+  // =====================================
 
   @Patch(':id')
   @Roles('ADMIN')

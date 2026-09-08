@@ -5,23 +5,44 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { CursosRepository } from './cursos.repository';
-import { CrearCursoDto } from './dto/crear-curso.dto';
-import { ActualizarCursoDto } from './dto/actualizar-curso.dto';
+import {
+  CursosRepository,
+} from './cursos.repository';
+
+import {
+  CrearCursoDto,
+} from './dto/crear-curso.dto';
+
+import {
+  ActualizarCursoDto,
+} from './dto/actualizar-curso.dto';
 
 @Injectable()
 export class CursosService {
   constructor(
-    private readonly cursosRepository: CursosRepository,
+    private readonly cursosRepository:
+      CursosRepository,
   ) {}
+
+  // =====================================
+  // OBTENER TODOS
+  // =====================================
 
   async obtenerTodos() {
     return this.cursosRepository.obtenerTodos();
   }
 
-  async obtenerPorId(id: number) {
+  // =====================================
+  // OBTENER POR ID
+  // =====================================
+
+  async obtenerPorId(
+    id: number,
+  ) {
     const curso =
-      await this.cursosRepository.buscarPorId(id);
+      await this.cursosRepository.buscarPorId(
+        id,
+      );
 
     if (!curso) {
       throw new NotFoundException(
@@ -32,24 +53,71 @@ export class CursosService {
     return curso;
   }
 
-  async crear(
-    datos: CrearCursoDto,
-  ) {
-    const codigo =
-      datos.codigo.trim().toUpperCase();
+  // =====================================
+  // GENERAR CODIGO
+  // =====================================
 
+  private async generarCodigoAutomatico() {
+    for (
+      let intento = 0;
+      intento < 20;
+      intento++
+    ) {
+      const numero =
+        Math.floor(
+          100000 +
+            Math.random() *
+              900000,
+        );
+
+      const codigo =
+        `CUR${numero}`;
+
+      const existente =
+        await this.cursosRepository.buscarPorCodigo(
+          codigo,
+        );
+
+      if (!existente) {
+        return codigo;
+      }
+    }
+
+    throw new ConflictException(
+      'No fue posible generar el codigo del curso.',
+    );
+  }
+
+  // =====================================
+  // CREAR
+  // =====================================
+
+  async crear(
+    datos:
+      CrearCursoDto,
+  ) {
     const nombre =
       datos.nombre.trim();
 
-    const existente =
-      await this.cursosRepository.buscarPorCodigo(
-        codigo,
-      );
+    let codigo =
+      datos.codigo
+        ?.trim()
+        .toUpperCase();
 
-    if (existente) {
-      throw new ConflictException(
-        'Ya existe un curso con ese codigo.',
-      );
+    if (!codigo) {
+      codigo =
+        await this.generarCodigoAutomatico();
+    } else {
+      const existente =
+        await this.cursosRepository.buscarPorCodigo(
+          codigo,
+        );
+
+      if (existente) {
+        throw new ConflictException(
+          'Ya existe un curso con ese codigo.',
+        );
+      }
     }
 
     return this.cursosRepository.crear(
@@ -58,12 +126,19 @@ export class CursosService {
     );
   }
 
+  // =====================================
+  // ACTUALIZAR
+  // =====================================
+
   async actualizar(
     id: number,
-    datos: ActualizarCursoDto,
+    datos:
+      ActualizarCursoDto,
   ) {
     const curso =
-      await this.cursosRepository.buscarPorId(id);
+      await this.cursosRepository.buscarPorId(
+        id,
+      );
 
     if (!curso) {
       throw new NotFoundException(
@@ -72,14 +147,19 @@ export class CursosService {
     }
 
     const codigo =
-      datos.codigo?.trim().toUpperCase() ??
+      datos.codigo
+        ?.trim()
+        .toUpperCase() ??
       curso.codigo;
 
     const nombre =
       datos.nombre?.trim() ??
       curso.nombre;
 
-    if (codigo !== curso.codigo) {
+    if (
+      codigo !==
+      curso.codigo
+    ) {
       const existente =
         await this.cursosRepository.buscarPorCodigo(
           codigo,
@@ -99,12 +179,18 @@ export class CursosService {
     );
   }
 
+  // =====================================
+  // ACTIVAR / DESACTIVAR
+  // =====================================
+
   async cambiarEstado(
     id: number,
     activo: boolean,
   ) {
     const curso =
-      await this.cursosRepository.buscarPorId(id);
+      await this.cursosRepository.buscarPorId(
+        id,
+      );
 
     if (!curso) {
       throw new NotFoundException(
@@ -113,7 +199,9 @@ export class CursosService {
     }
 
     if (
-      Boolean(curso.activo) === activo
+      Boolean(
+        curso.activo,
+      ) === activo
     ) {
       throw new BadRequestException(
         activo

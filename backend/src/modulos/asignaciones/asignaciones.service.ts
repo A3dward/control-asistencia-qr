@@ -5,38 +5,53 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { AsignacionesRepository } from './asignaciones.repository';
-import { CrearAsignacionDto } from './dto/crear-asignacion.dto';
+import {
+  AsignacionesRepository,
+} from './asignaciones.repository';
+
+import {
+  CrearAsignacionDto,
+} from './dto/crear-asignacion.dto';
 
 @Injectable()
 export class AsignacionesService {
   constructor(
-    private readonly asignacionesRepository: AsignacionesRepository,
+    private readonly asignacionesRepository:
+      AsignacionesRepository,
   ) {}
 
   async obtenerTodas() {
     return this.asignacionesRepository.obtenerTodas();
   }
 
-  async obtenerPorId(id: number) {
+  async obtenerPorId(
+    id: number,
+  ) {
     const asignacion =
-      await this.asignacionesRepository.buscarPorId(id);
+      await this.asignacionesRepository.buscarPorId(
+        id,
+      );
 
     if (!asignacion) {
       throw new NotFoundException(
-        'La asignacion docente no existe.',
+        'La asignacion no existe.',
       );
     }
 
     return asignacion;
   }
 
+  // =====================================
+  // CREAR ASIGNACION
+  // =====================================
+
   async crear(
-    datos: CrearAsignacionDto,
+    datos:
+      CrearAsignacionDto,
   ) {
-    // ============================
-    // VALIDAR DOCENTE
-    // ============================
+    // =================================
+    // DOCENTE
+    // =================================
 
     const docente =
       await this.asignacionesRepository.buscarDocentePorId(
@@ -54,13 +69,13 @@ export class AsignacionesService {
       !docente.usuario_activo
     ) {
       throw new BadRequestException(
-        'No se puede asignar un docente inactivo.',
+        'El docente se encuentra inactivo.',
       );
     }
 
-    // ============================
-    // VALIDAR CURSO
-    // ============================
+    // =================================
+    // CURSO
+    // =================================
 
     const curso =
       await this.asignacionesRepository.buscarCursoPorId(
@@ -75,13 +90,13 @@ export class AsignacionesService {
 
     if (!curso.activo) {
       throw new BadRequestException(
-        'No se puede utilizar un curso inactivo.',
+        'El curso se encuentra inactivo.',
       );
     }
 
-    // ============================
-    // VALIDAR SECCION
-    // ============================
+    // =================================
+    // CLASE
+    // =================================
 
     const seccion =
       await this.asignacionesRepository.buscarSeccionPorId(
@@ -90,36 +105,53 @@ export class AsignacionesService {
 
     if (!seccion) {
       throw new NotFoundException(
-        'La seccion no existe.',
+        'La clase no existe.',
       );
     }
 
     if (!seccion.activo) {
       throw new BadRequestException(
-        'No se puede utilizar una seccion inactiva.',
+        'La clase se encuentra inactiva.',
       );
     }
 
-    // ============================
-    // VALIDAR DUPLICADO
-    // ============================
+    // =================================
+    // UN CURSO NO PUEDE ESTAR
+    // EN DOS CLASES
+    // =================================
 
-    const asignacionExistente =
+    const otraSeccion =
+      await this.asignacionesRepository.buscarCursoEnOtraSeccion(
+        datos.curso_id,
+        datos.seccion_id,
+      );
+
+    if (otraSeccion) {
+      throw new ConflictException(
+        `Este curso ya pertenece a ${otraSeccion.grado} - ${otraSeccion.anio_academico}.`,
+      );
+    }
+
+    // =================================
+    // EVITAR DUPLICADO EXACTO
+    // =================================
+
+    const existente =
       await this.asignacionesRepository.buscarAsignacion(
         datos.docente_id,
         datos.curso_id,
         datos.seccion_id,
       );
 
-    if (asignacionExistente) {
-      if (asignacionExistente.activo) {
+    if (existente) {
+      if (existente.activo) {
         throw new ConflictException(
-          'Esta asignacion docente ya existe.',
+          'Este curso ya esta agregado a esta clase.',
         );
       }
 
       throw new ConflictException(
-        'Esta asignacion ya existe pero se encuentra inactiva. Puede reactivarla.',
+        'Esta relacion ya existe pero se encuentra inactiva.',
       );
     }
 
@@ -129,6 +161,10 @@ export class AsignacionesService {
       datos.seccion_id,
     );
   }
+
+  // =====================================
+  // POR DOCENTE
+  // =====================================
 
   async obtenerPorDocente(
     docenteId: number,
@@ -149,6 +185,10 @@ export class AsignacionesService {
     );
   }
 
+  // =====================================
+  // POR SECCION
+  // =====================================
+
   async obtenerPorSeccion(
     seccionId: number,
   ) {
@@ -159,7 +199,7 @@ export class AsignacionesService {
 
     if (!seccion) {
       throw new NotFoundException(
-        'La seccion no existe.',
+        'La clase no existe.',
       );
     }
 
@@ -168,31 +208,36 @@ export class AsignacionesService {
     );
   }
 
+  // =====================================
+  // ESTADO
+  // =====================================
+
   async cambiarEstado(
     id: number,
     activo: boolean,
   ) {
     const asignacion =
-      await this.asignacionesRepository.buscarPorId(id);
+      await this.asignacionesRepository.buscarPorId(
+        id,
+      );
 
     if (!asignacion) {
       throw new NotFoundException(
-        'La asignacion docente no existe.',
+        'La asignacion no existe.',
       );
     }
 
     if (
-      Boolean(asignacion.activo) === activo
+      Boolean(
+        asignacion.activo,
+      ) === activo
     ) {
       throw new BadRequestException(
         activo
-          ? 'La asignacion ya se encuentra activa.'
-          : 'La asignacion ya se encuentra inactiva.',
+          ? 'La asignacion ya esta activa.'
+          : 'La asignacion ya esta inactiva.',
       );
     }
-
-    // Si se intenta reactivar, nuevamente
-    // comprobamos todas las relaciones.
 
     if (activo) {
       if (
@@ -200,19 +245,35 @@ export class AsignacionesService {
         !asignacion.usuario_activo
       ) {
         throw new BadRequestException(
-          'No se puede activar la asignacion porque el docente se encuentra inactivo.',
+          'No se puede activar porque el docente esta inactivo.',
         );
       }
 
-      if (!asignacion.curso_activo) {
+      if (
+        !asignacion.curso_activo
+      ) {
         throw new BadRequestException(
-          'No se puede activar la asignacion porque el curso se encuentra inactivo.',
+          'No se puede activar porque el curso esta inactivo.',
         );
       }
 
-      if (!asignacion.seccion_activa) {
+      if (
+        !asignacion.seccion_activa
+      ) {
         throw new BadRequestException(
-          'No se puede activar la asignacion porque la seccion se encuentra inactiva.',
+          'No se puede activar porque la clase esta inactiva.',
+        );
+      }
+
+      const otraSeccion =
+        await this.asignacionesRepository.buscarCursoEnOtraSeccion(
+          asignacion.curso_id,
+          asignacion.seccion_id,
+        );
+
+      if (otraSeccion) {
+        throw new ConflictException(
+          'El curso ya se encuentra asociado a otra clase.',
         );
       }
     }

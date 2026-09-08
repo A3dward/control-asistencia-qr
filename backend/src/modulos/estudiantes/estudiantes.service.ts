@@ -26,9 +26,17 @@ export class EstudiantesService {
       EstudiantesRepository,
   ) {}
 
+  // =====================================
+  // OBTENER TODOS
+  // =====================================
+
   async obtenerTodos() {
     return this.estudiantesRepository.obtenerTodos();
   }
+
+  // =====================================
+  // OBTENER POR ID
+  // =====================================
 
   async obtenerPorId(
     id: number,
@@ -78,7 +86,7 @@ export class EstudiantesService {
     }
 
     throw new ConflictException(
-      'No fue posible generar un codigo para el estudiante.',
+      'No fue posible generar el codigo del estudiante.',
     );
   }
 
@@ -98,10 +106,9 @@ export class EstudiantesService {
 
     let codigo =
       datos.codigo_estudiante
-        ?.trim();
+        ?.trim()
+        .toUpperCase();
 
-    // Si no se envia codigo,
-    // el sistema lo genera.
     if (!codigo) {
       codigo =
         await this.generarCodigoAutomatico();
@@ -148,7 +155,9 @@ export class EstudiantesService {
     }
 
     const codigo =
-      datos.codigo_estudiante?.trim() ??
+      datos.codigo_estudiante
+        ?.trim()
+        .toUpperCase() ??
       estudiante.codigo_estudiante;
 
     const nombres =
@@ -163,14 +172,12 @@ export class EstudiantesService {
       codigo !==
       estudiante.codigo_estudiante
     ) {
-      const codigoExistente =
+      const existente =
         await this.estudiantesRepository.buscarPorCodigo(
           codigo,
         );
 
-      if (
-        codigoExistente
-      ) {
+      if (existente) {
         throw new ConflictException(
           'Ya existe otro estudiante con ese codigo.',
         );
@@ -186,7 +193,7 @@ export class EstudiantesService {
   }
 
   // =====================================
-  // ESTADO
+  // ACTIVAR / DESACTIVAR
   // =====================================
 
   async cambiarEstado(
@@ -223,7 +230,7 @@ export class EstudiantesService {
   }
 
   // =====================================
-  // QR
+  // GENERAR QR
   // =====================================
 
   async generarQr(
@@ -251,24 +258,21 @@ export class EstudiantesService {
     const contenidoQr =
       `ASISTENCIAQR:${estudiante.token_qr}`;
 
-    const imagenQr =
-      await QRCode.toBuffer(
-        contenidoQr,
-        {
-          type:
-            'png',
+    return QRCode.toBuffer(
+      contenidoQr,
+      {
+        type:
+          'png',
 
-          width:
-            500,
+        width:
+          500,
 
-          margin:
-            2,
+        margin:
+          2,
 
-          errorCorrectionLevel:
-            'M',
-        },
-      );
-
-    return imagenQr;
+        errorCorrectionLevel:
+          'M',
+      },
+    );
   }
 }
