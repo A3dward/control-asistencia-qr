@@ -1,25 +1,68 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import {
+  Module,
+} from '@nestjs/common';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import {
+  ConfigModule,
+} from '@nestjs/config';
 
-import { BaseDatosModule } from './base-datos/base-datos.module';
+import {
+  AppController,
+} from './app.controller';
 
-import { EstudiantesModule } from './modulos/estudiantes/estudiantes.module';
-import { SeccionesModule } from './modulos/secciones/secciones.module';
-import { CursosModule } from './modulos/cursos/cursos.module';
-import { DocentesModule } from './modulos/docentes/docentes.module';
-import { InscripcionesModule } from './modulos/inscripciones/inscripciones.module';
-import { AsignacionesModule } from './modulos/asignaciones/asignaciones.module';
-import { SesionesClaseModule } from './modulos/sesiones-clase/sesiones-clase.module';
-import { AsistenciasModule } from './modulos/asistencias/asistencias.module';
-import { AutenticacionModule } from './modulos/autenticacion/autenticacion.module';
+import {
+  AppService,
+} from './app.service';
+
+import {
+  BaseDatosModule,
+} from './base-datos/base-datos.module';
+
+import {
+  EstudiantesModule,
+} from './modulos/estudiantes/estudiantes.module';
+
+import {
+  SeccionesModule,
+} from './modulos/secciones/secciones.module';
+
+import {
+  CursosModule,
+} from './modulos/cursos/cursos.module';
+
+import {
+  DocentesModule,
+} from './modulos/docentes/docentes.module';
+
+import {
+  InscripcionesModule,
+} from './modulos/inscripciones/inscripciones.module';
+
+import {
+  AsignacionesModule,
+} from './modulos/asignaciones/asignaciones.module';
+
+import {
+  GestionClasesModule,
+} from './modulos/gestion-clases/gestion-clases.module';
+
+import {
+  SesionesClaseModule,
+} from './modulos/sesiones-clase/sesiones-clase.module';
+
+import {
+  AsistenciasModule,
+} from './modulos/asistencias/asistencias.module';
+
+import {
+  AutenticacionModule,
+} from './modulos/autenticacion/autenticacion.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
+      isGlobal:
+        true,
     }),
 
     BaseDatosModule,
@@ -35,6 +78,8 @@ import { AutenticacionModule } from './modulos/autenticacion/autenticacion.modul
     InscripcionesModule,
 
     AsignacionesModule,
+
+    GestionClasesModule,
 
     SesionesClaseModule,
 
