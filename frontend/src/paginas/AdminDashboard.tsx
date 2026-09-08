@@ -253,7 +253,7 @@ export default function AdminDashboard() {
             <Text
               type="secondary"
             >
-              Definir los cursos que pertenecen a cada clase.
+              ASigna cursos a las clases.
             </Text>
           </Card>
         </Col>
