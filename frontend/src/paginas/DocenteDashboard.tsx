@@ -59,7 +59,7 @@ export default function DocenteDashboard() {
                 4,
             }}
           >
-            Panel del Docente
+            Docente
           </Title>
 
           <Text
