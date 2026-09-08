@@ -37,36 +37,49 @@ const {
   Text,
 } = Typography;
 
+// =====================================
+// INTERFACES
+// =====================================
+
 interface Asignacion {
   asignacion_id: number;
+
   activo: boolean;
 
   curso_id: number;
+
   curso: string;
 
   seccion_id: number;
+
   seccion: string;
 
   grado: string;
+
   anio_academico: number;
 }
 
 interface Estudiante {
   id: number;
+
   codigo_estudiante: string;
+
   nombres: string;
+
   apellidos: string;
 }
 
 interface FormularioEstudiante {
   seccion_id: number;
 
-  codigo_estudiante: string;
-
   nombres: string;
 
   apellidos: string;
 }
+
+// =====================================
+// COMPONENTE
+// =====================================
 
 export default function EstudiantesDocente() {
   const navigate =
@@ -104,6 +117,12 @@ export default function EstudiantesDocente() {
     );
 
   const [
+    seccionRegistrada,
+    setSeccionRegistrada,
+  ] =
+    useState<string>('');
+
+  const [
     qrUrl,
     setQrUrl,
   ] =
@@ -111,12 +130,18 @@ export default function EstudiantesDocente() {
       null,
     );
 
+  // =====================================
+  // MENSAJE DE ERROR
+  // =====================================
+
   const obtenerMensajeError = (
     error: any,
     predeterminado: string,
   ) => {
     const respuesta =
-      error.response?.data?.message;
+      error.response
+        ?.data
+        ?.message;
 
     if (
       Array.isArray(
@@ -134,6 +159,10 @@ export default function EstudiantesDocente() {
     );
   };
 
+  // =====================================
+  // CARGAR ASIGNACIONES DEL DOCENTE
+  // =====================================
+
   const cargarAsignaciones =
     async () => {
       try {
@@ -147,8 +176,8 @@ export default function EstudiantesDocente() {
           );
 
         setAsignaciones(
-          respuesta.data.datos ??
-            [],
+          respuesta.data
+            .datos ?? [],
         );
       } catch (
         error: any
@@ -166,12 +195,20 @@ export default function EstudiantesDocente() {
       }
     };
 
+  // =====================================
+  // CARGAR AL INICIAR
+  // =====================================
+
   useEffect(
     () => {
       cargarAsignaciones();
     },
     [],
   );
+
+  // =====================================
+  // LIBERAR IMAGEN QR
+  // =====================================
 
   useEffect(
     () => {
@@ -186,6 +223,10 @@ export default function EstudiantesDocente() {
     [qrUrl],
   );
 
+  // =====================================
+  // OBTENER SECCIONES UNICAS
+  // =====================================
+
   const seccionesPropias =
     useMemo(
       () => {
@@ -194,8 +235,11 @@ export default function EstudiantesDocente() {
             number,
             {
               id: number;
+
               nombre: string;
+
               grado: string;
+
               anio_academico: number;
             }
           >();
@@ -245,6 +289,10 @@ export default function EstudiantesDocente() {
       ],
     );
 
+  // =====================================
+  // OBTENER QR DEL ESTUDIANTE
+  // =====================================
+
   const cargarQr =
     async (
       estudianteId:
@@ -280,11 +328,15 @@ export default function EstudiantesDocente() {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible obtener el QR.',
+            'El estudiante fue registrado, pero no fue posible obtener el QR.',
           ),
         );
       }
     };
+
+  // =====================================
+  // REGISTRAR ESTUDIANTE
+  // =====================================
 
   const registrarEstudiante =
     async (
@@ -300,6 +352,10 @@ export default function EstudiantesDocente() {
           null,
         );
 
+        setSeccionRegistrada(
+          '',
+        );
+
         if (qrUrl) {
           URL.revokeObjectURL(
             qrUrl,
@@ -310,13 +366,32 @@ export default function EstudiantesDocente() {
           );
         }
 
+        // =================================
+        // BUSCAR NOMBRE DE LA SECCION
+        // =================================
+
+        const seccion =
+          seccionesPropias.find(
+            (
+              item,
+            ) =>
+              Number(
+                item.id,
+              ) ===
+              Number(
+                valores.seccion_id,
+              ),
+          );
+
+        // =================================
+        // CREAR ESTUDIANTE
+        // EL CODIGO LO GENERA EL BACKEND
+        // =================================
+
         const respuestaEstudiante =
           await api.post(
             '/estudiantes',
             {
-              codigo_estudiante:
-                valores.codigo_estudiante,
-
               nombres:
                 valores.nombres,
 
@@ -330,6 +405,10 @@ export default function EstudiantesDocente() {
           respuestaEstudiante
             .data
             .datos;
+
+        // =================================
+        // INSCRIBIR EN SECCION
+        // =================================
 
         await api.post(
           '/inscripciones/mi-seccion',
@@ -346,9 +425,23 @@ export default function EstudiantesDocente() {
           },
         );
 
+        // =================================
+        // GUARDAR RESULTADO
+        // =================================
+
         setEstudianteCreado(
           estudiante,
         );
+
+        if (seccion) {
+          setSeccionRegistrada(
+            `${seccion.grado} - Seccion ${seccion.nombre}`,
+          );
+        }
+
+        // =================================
+        // CARGAR QR
+        // =================================
 
         await cargarQr(
           estudiante.id,
@@ -357,7 +450,7 @@ export default function EstudiantesDocente() {
         form.resetFields();
 
         message.success(
-          'Estudiante registrado correctamente.',
+          'Estudiante registrado e inscrito correctamente.',
         );
       } catch (
         error: any
@@ -374,6 +467,10 @@ export default function EstudiantesDocente() {
         );
       }
     };
+
+  // =====================================
+  // PANTALLA DE CARGA
+  // =====================================
 
   if (cargando) {
     return (
@@ -399,6 +496,10 @@ export default function EstudiantesDocente() {
     );
   }
 
+  // =====================================
+  // VISTA
+  // =====================================
+
   return (
     <div
       style={{
@@ -412,6 +513,10 @@ export default function EstudiantesDocente() {
           24,
       }}
     >
+      {/* ================================= */}
+      {/* REGRESAR */}
+      {/* ================================= */}
+
       <Button
         icon={
           <ArrowLeftOutlined />
@@ -429,6 +534,10 @@ export default function EstudiantesDocente() {
         Regresar
       </Button>
 
+      {/* ================================= */}
+      {/* TITULO */}
+      {/* ================================= */}
+
       <Title level={2}>
         Estudiantes
       </Title>
@@ -436,17 +545,22 @@ export default function EstudiantesDocente() {
       <Text
         type="secondary"
       >
-        Registre estudiantes
-        dentro de las secciones
-        que tiene asignadas.
+        Registre nuevos
+        estudiantes dentro de
+        las secciones que tiene
+        asignadas.
       </Text>
+
+      {/* ================================= */}
+      {/* FORMULARIO */}
+      {/* ================================= */}
 
       <Card
         title={
           <Space>
             <UserAddOutlined />
 
-            Registrar estudiante
+            Registrar nuevo estudiante
           </Space>
         }
         style={{
@@ -463,141 +577,169 @@ export default function EstudiantesDocente() {
             description="Primero ingrese a Mis clases y asignese una clase."
           />
         ) : (
-          <Form
-            form={
-              form
-            }
-            layout="vertical"
-            onFinish={
-              registrarEstudiante
-            }
-          >
-            <Form.Item
-              name="seccion_id"
-              label="Seccion"
-              rules={[
-                {
-                  required:
-                    true,
+          <>
+            <Alert
+              type="info"
+              showIcon
+              message="Registro sencillo"
+              description="Ingrese los datos del estudiante. El sistema generara automaticamente su codigo interno y su codigo QR."
+              style={{
+                marginBottom:
+                  20,
+              }}
+            />
 
-                  message:
-                    'Seleccione una seccion.',
-                },
-              ]}
-            >
-              <Select
-                placeholder="Seleccione una de sus secciones"
-                options={
-                  seccionesPropias.map(
-                    (
-                      seccion,
-                    ) => ({
-                      value:
-                        seccion.id,
-
-                      label:
-                        `${seccion.grado} - Seccion ${seccion.nombre} - ${seccion.anio_academico}`,
-                    }),
-                  )
-                }
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="codigo_estudiante"
-              label="Codigo del estudiante"
-              rules={[
-                {
-                  required:
-                    true,
-
-                  message:
-                    'Ingrese el codigo del estudiante.',
-                },
-              ]}
-            >
-              <Input
-                placeholder="Ejemplo: EST002"
-                maxLength={
-                  30
-                }
-              />
-            </Form.Item>
-
-            <Row
-              gutter={[
-                16,
-                0,
-              ]}
-            >
-              <Col
-                xs={24}
-                md={12}
-              >
-                <Form.Item
-                  name="nombres"
-                  label="Nombres"
-                  rules={[
-                    {
-                      required:
-                        true,
-
-                      message:
-                        'Ingrese los nombres.',
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Nombres"
-                    maxLength={
-                      100
-                    }
-                  />
-                </Form.Item>
-              </Col>
-
-              <Col
-                xs={24}
-                md={12}
-              >
-                <Form.Item
-                  name="apellidos"
-                  label="Apellidos"
-                  rules={[
-                    {
-                      required:
-                        true,
-
-                      message:
-                        'Ingrese los apellidos.',
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Apellidos"
-                    maxLength={
-                      100
-                    }
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            <Button
-              type="primary"
-              htmlType="submit"
-              icon={
-                <UserAddOutlined />
+            <Form
+              form={
+                form
               }
-              loading={
-                guardando
+              layout="vertical"
+              onFinish={
+                registrarEstudiante
               }
             >
-              Registrar estudiante
-            </Button>
-          </Form>
+              {/* ========================= */}
+              {/* SECCION */}
+              {/* ========================= */}
+
+              <Form.Item
+                name="seccion_id"
+                label="Seccion del estudiante"
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Seleccione una seccion.',
+                  },
+                ]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Seleccione una de sus secciones"
+                  options={
+                    seccionesPropias.map(
+                      (
+                        seccion,
+                      ) => ({
+                        value:
+                          seccion.id,
+
+                        label:
+                          `${seccion.grado} - Seccion ${seccion.nombre} - ${seccion.anio_academico}`,
+                      }),
+                    )
+                  }
+                />
+              </Form.Item>
+
+              {/* ========================= */}
+              {/* NOMBRES / APELLIDOS */}
+              {/* ========================= */}
+
+              <Row
+                gutter={[
+                  16,
+                  0,
+                ]}
+              >
+                <Col
+                  xs={24}
+                  md={12}
+                >
+                  <Form.Item
+                    name="nombres"
+                    label="Nombres"
+                    rules={[
+                      {
+                        required:
+                          true,
+
+                        message:
+                          'Ingrese los nombres.',
+                      },
+
+                      {
+                        whitespace:
+                          true,
+
+                        message:
+                          'Ingrese nombres validos.',
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      placeholder="Ejemplo: Juan Carlos"
+                      maxLength={
+                        100
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col
+                  xs={24}
+                  md={12}
+                >
+                  <Form.Item
+                    name="apellidos"
+                    label="Apellidos"
+                    rules={[
+                      {
+                        required:
+                          true,
+
+                        message:
+                          'Ingrese los apellidos.',
+                      },
+
+                      {
+                        whitespace:
+                          true,
+
+                        message:
+                          'Ingrese apellidos validos.',
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      placeholder="Ejemplo: Perez Lopez"
+                      maxLength={
+                        100
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* ========================= */}
+              {/* BOTON */}
+              {/* ========================= */}
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                icon={
+                  <UserAddOutlined />
+                }
+                loading={
+                  guardando
+                }
+              >
+                Registrar y generar QR
+              </Button>
+            </Form>
+          </>
         )}
       </Card>
+
+      {/* ================================= */}
+      {/* RESULTADO */}
+      {/* ================================= */}
 
       {estudianteCreado && (
         <Card
@@ -613,6 +755,10 @@ export default function EstudiantesDocente() {
               24,
             ]}
           >
+            {/* =========================== */}
+            {/* INFORMACION */}
+            {/* =========================== */}
+
             <Col
               xs={24}
               md={14}
@@ -620,7 +766,7 @@ export default function EstudiantesDocente() {
               <Alert
                 type="success"
                 showIcon
-                message="Registro completado"
+                message="Registro completado correctamente"
                 description={
                   `${estudianteCreado.nombres} ${estudianteCreado.apellidos}`
                 }
@@ -629,20 +775,70 @@ export default function EstudiantesDocente() {
               <div
                 style={{
                   marginTop:
-                    20,
+                    24,
                 }}
               >
                 <Text strong>
-                  Codigo:{' '}
+                  Estudiante:
                 </Text>
+
+                <br />
+
+                <Text>
+                  {
+                    estudianteCreado.nombres
+                  }{' '}
+                  {
+                    estudianteCreado.apellidos
+                  }
+                </Text>
+
+                <br />
+                <br />
+
+                <Text strong>
+                  Seccion:
+                </Text>
+
+                <br />
+
+                <Text>
+                  {
+                    seccionRegistrada
+                  }
+                </Text>
+
+                <br />
+                <br />
+
+                <Text strong>
+                  Codigo interno:
+                </Text>
+
+                <br />
 
                 <Text>
                   {
                     estudianteCreado.codigo_estudiante
                   }
                 </Text>
+
+                <br />
+
+                <Text
+                  type="secondary"
+                >
+                  Este codigo es
+                  generado
+                  automaticamente por
+                  el sistema.
+                </Text>
               </div>
             </Col>
+
+            {/* =========================== */}
+            {/* QR */}
+            {/* =========================== */}
 
             <Col
               xs={24}
@@ -652,7 +848,7 @@ export default function EstudiantesDocente() {
                   'center',
               }}
             >
-              {qrUrl && (
+              {qrUrl ? (
                 <>
                   <Space>
                     <QrcodeOutlined />
@@ -678,7 +874,19 @@ export default function EstudiantesDocente() {
                       preview
                     />
                   </div>
+
+                  <Text
+                    type="secondary"
+                  >
+                    Este QR puede
+                    imprimirse y
+                    utilizarse para
+                    registrar la
+                    asistencia.
+                  </Text>
                 </>
+              ) : (
+                <Spin />
               )}
             </Col>
           </Row>
