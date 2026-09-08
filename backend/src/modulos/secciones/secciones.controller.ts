@@ -44,10 +44,6 @@ export class SeccionesController {
       SeccionesService,
   ) {}
 
-  // =====================================
-  // ADMIN / DOCENTE - CONSULTAR
-  // =====================================
-
   @Get()
   @Roles(
     'ADMIN',
@@ -69,15 +65,10 @@ export class SeccionesController {
     };
   }
 
-  // =====================================
-  // ADMIN / DOCENTE - CREAR CLASE
-  // =====================================
+  // SOLO ADMIN
 
   @Post()
-  @Roles(
-    'ADMIN',
-    'DOCENTE',
-  )
+  @Roles('ADMIN')
   async crear(
     @Body()
     datos:
@@ -96,10 +87,6 @@ export class SeccionesController {
         seccion,
     };
   }
-
-  // =====================================
-  // CONSULTAR ID
-  // =====================================
 
   @Get(':id')
   @Roles(
@@ -126,10 +113,6 @@ export class SeccionesController {
         seccion,
     };
   }
-
-  // =====================================
-  // ADMIN - MODIFICAR
-  // =====================================
 
   @Patch(':id')
   @Roles('ADMIN')

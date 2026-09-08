@@ -56,75 +56,39 @@ export class EstudiantesService {
   }
 
   // =====================================
-  // GENERAR CODIGO AUTOMATICO
-  // =====================================
-
-  private async generarCodigoAutomatico() {
-    for (
-      let intento = 0;
-      intento < 20;
-      intento++
-    ) {
-      const numero =
-        Math.floor(
-          100000 +
-            Math.random() *
-              900000,
-        );
-
-      const codigo =
-        `EST${numero}`;
-
-      const existente =
-        await this.estudiantesRepository.buscarPorCodigo(
-          codigo,
-        );
-
-      if (!existente) {
-        return codigo;
-      }
-    }
-
-    throw new ConflictException(
-      'No fue posible generar el codigo del estudiante.',
-    );
-  }
-
-  // =====================================
-  // CREAR
+  // CREAR ESTUDIANTE
   // =====================================
 
   async crear(
     datos:
       CrearEstudianteDto,
   ) {
+    const codigo =
+      datos.codigo_estudiante
+        .trim()
+        .toUpperCase();
+
     const nombres =
       datos.nombres.trim();
 
     const apellidos =
       datos.apellidos.trim();
 
-    let codigo =
-      datos.codigo_estudiante
-        ?.trim()
-        .toUpperCase();
+    // =================================
+    // VALIDAR CODIGO / CARNET
+    // =================================
 
-    if (!codigo) {
-      codigo =
-        await this.generarCodigoAutomatico();
-    } else {
-      const estudianteExistente =
-        await this.estudiantesRepository.buscarPorCodigo(
-          codigo,
-        );
+    const estudianteExistente =
+      await this.estudiantesRepository.buscarPorCodigo(
+        codigo,
+      );
 
-      if (
-        estudianteExistente
-      ) {
-        throw new ConflictException(
-          'Ya existe un estudiante con ese codigo.',
-        );
-      }
+    if (
+      estudianteExistente
+    ) {
+      throw new ConflictException(
+        'Ya existe un estudiante con ese carnet o codigo.',
+      );
     }
 
     return this.estudiantesRepository.crear(
@@ -179,7 +143,7 @@ export class EstudiantesService {
 
       if (existente) {
         throw new ConflictException(
-          'Ya existe otro estudiante con ese codigo.',
+          'Ya existe otro estudiante con ese carnet o codigo.',
         );
       }
     }

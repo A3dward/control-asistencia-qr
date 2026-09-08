@@ -1,11 +1,8 @@
 import {
-  Body,
   Controller,
   Get,
   Param,
   ParseIntPipe,
-  Patch,
-  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -13,14 +10,6 @@ import {
 import {
   AsignacionesService,
 } from './asignaciones.service';
-
-import {
-  CrearAsignacionDto,
-} from './dto/crear-asignacion.dto';
-
-import {
-  AutoasignarClaseDto,
-} from './dto/autoasignar-clase.dto';
 
 import {
   AutenticacionGuard,
@@ -50,7 +39,11 @@ export class AsignacionesController {
   ) {}
 
   // =====================================
-  // DOCENTE - MIS ASIGNACIONES
+  // DOCENTE
+  //
+  // Se conserva solamente porque
+  // sesiones y asistencia siguen usando
+  // internamente asignaciones_docentes.
   // =====================================
 
   @Get('mis-asignaciones')
@@ -58,7 +51,8 @@ export class AsignacionesController {
   async obtenerMisAsignaciones(
     @Req()
     request: {
-      usuario: UsuarioAutenticado;
+      usuario:
+        UsuarioAutenticado;
     },
   ) {
     const docenteId =
@@ -73,7 +67,9 @@ export class AsignacionesController {
 
     const activas =
       asignaciones.filter(
-        (asignacion: any) =>
+        (
+          asignacion: any,
+        ) =>
           Boolean(
             asignacion.activo,
           ),
@@ -81,7 +77,7 @@ export class AsignacionesController {
 
     return {
       mensaje:
-        'Mis asignaciones obtenidas correctamente',
+        'Asignaciones internas obtenidas correctamente',
 
       total:
         activas.length,
@@ -92,101 +88,29 @@ export class AsignacionesController {
   }
 
   // =====================================
-  // DOCENTE - AUTOASIGNARSE CLASE
-  // =====================================
-
-  @Post('autoasignar')
-  @Roles('DOCENTE')
-  async autoasignar(
-    @Req()
-    request: {
-      usuario: UsuarioAutenticado;
-    },
-
-    @Body()
-    datos:
-      AutoasignarClaseDto,
-  ) {
-    const docenteId =
-      Number(
-        request.usuario.docente_id,
-      );
-
-    const asignacion =
-      await this.asignacionesService.crear(
-        {
-          docente_id:
-            docenteId,
-
-          curso_id:
-            datos.curso_id,
-
-          seccion_id:
-            datos.seccion_id,
-        },
-      );
-
-    return {
-      mensaje:
-        'Clase asignada correctamente',
-
-      datos:
-        asignacion,
-    };
-  }
-
-  // =====================================
-  // ADMIN - LISTAR TODAS
+  // ADMIN - CONSULTAS INTERNAS
   // =====================================
 
   @Get()
   @Roles('ADMIN')
   async obtenerTodas() {
-    const asignaciones =
+    const datos =
       await this.asignacionesService.obtenerTodas();
 
     return {
       mensaje:
-        'Asignaciones docentes obtenidas correctamente',
+        'Asignaciones internas obtenidas correctamente',
 
       total:
-        asignaciones.length,
+        datos.length,
 
-      datos:
-        asignaciones,
+      datos,
     };
   }
 
-  // =====================================
-  // ADMIN - CREAR
-  // =====================================
-
-  @Post()
-  @Roles('ADMIN')
-  async crear(
-    @Body()
-    datos:
-      CrearAsignacionDto,
-  ) {
-    const asignacion =
-      await this.asignacionesService.crear(
-        datos,
-      );
-
-    return {
-      mensaje:
-        'Asignacion docente registrada correctamente',
-
-      datos:
-        asignacion,
-    };
-  }
-
-  // =====================================
-  // ADMIN - POR DOCENTE
-  // =====================================
-
-  @Get('docente/:docenteId')
+  @Get(
+    'docente/:docenteId',
+  )
   @Roles('ADMIN')
   async obtenerPorDocente(
     @Param(
@@ -195,28 +119,25 @@ export class AsignacionesController {
     )
     docenteId: number,
   ) {
-    const asignaciones =
+    const datos =
       await this.asignacionesService.obtenerPorDocente(
         docenteId,
       );
 
     return {
       mensaje:
-        'Asignaciones del docente obtenidas correctamente',
+        'Asignaciones internas del docente obtenidas correctamente',
 
       total:
-        asignaciones.length,
+        datos.length,
 
-      datos:
-        asignaciones,
+      datos,
     };
   }
 
-  // =====================================
-  // ADMIN - POR SECCION
-  // =====================================
-
-  @Get('seccion/:seccionId')
+  @Get(
+    'seccion/:seccionId',
+  )
   @Roles('ADMIN')
   async obtenerPorSeccion(
     @Param(
@@ -225,26 +146,21 @@ export class AsignacionesController {
     )
     seccionId: number,
   ) {
-    const asignaciones =
+    const datos =
       await this.asignacionesService.obtenerPorSeccion(
         seccionId,
       );
 
     return {
       mensaje:
-        'Asignaciones de la seccion obtenidas correctamente',
+        'Asignaciones internas de la clase obtenidas correctamente',
 
       total:
-        asignaciones.length,
+        datos.length,
 
-      datos:
-        asignaciones,
+      datos,
     };
   }
-
-  // =====================================
-  // ADMIN - CONSULTAR ID
-  // =====================================
 
   @Get(':id')
   @Roles('ADMIN')
@@ -255,73 +171,16 @@ export class AsignacionesController {
     )
     id: number,
   ) {
-    const asignacion =
+    const datos =
       await this.asignacionesService.obtenerPorId(
         id,
       );
 
     return {
       mensaje:
-        'Asignacion docente obtenida correctamente',
+        'Asignacion interna obtenida correctamente',
 
-      datos:
-        asignacion,
-    };
-  }
-
-  // =====================================
-  // ADMIN - DESACTIVAR
-  // =====================================
-
-  @Patch(':id/desactivar')
-  @Roles('ADMIN')
-  async desactivar(
-    @Param(
-      'id',
-      ParseIntPipe,
-    )
-    id: number,
-  ) {
-    const asignacion =
-      await this.asignacionesService.cambiarEstado(
-        id,
-        false,
-      );
-
-    return {
-      mensaje:
-        'Asignacion docente desactivada correctamente',
-
-      datos:
-        asignacion,
-    };
-  }
-
-  // =====================================
-  // ADMIN - ACTIVAR
-  // =====================================
-
-  @Patch(':id/activar')
-  @Roles('ADMIN')
-  async activar(
-    @Param(
-      'id',
-      ParseIntPipe,
-    )
-    id: number,
-  ) {
-    const asignacion =
-      await this.asignacionesService.cambiarEstado(
-        id,
-        true,
-      );
-
-    return {
-      mensaje:
-        'Asignacion docente activada correctamente',
-
-      datos:
-        asignacion,
+      datos,
     };
   }
 }

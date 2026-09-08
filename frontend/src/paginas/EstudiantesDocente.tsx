@@ -1,5 +1,6 @@
 import {
   ArrowLeftOutlined,
+  IdcardOutlined,
   QrcodeOutlined,
   UserAddOutlined,
 } from '@ant-design/icons';
@@ -74,6 +75,8 @@ interface Estudiante {
 
 interface FormularioEstudiante {
   seccion_id: number;
+
+  codigo_estudiante: string;
 
   nombres: string;
 
@@ -160,7 +163,7 @@ export default function EstudiantesDocente() {
     );
 
   // =====================================
-  // ERROR
+  // MENSAJE DE ERROR
   // =====================================
 
   const obtenerMensajeError = (
@@ -189,7 +192,7 @@ export default function EstudiantesDocente() {
   };
 
   // =====================================
-  // TEXTO CLASE
+  // NOMBRE DE LA CLASE
   // =====================================
 
   const obtenerNombreClase = (
@@ -213,7 +216,7 @@ export default function EstudiantesDocente() {
   };
 
   // =====================================
-  // CARGAR ASIGNACIONES
+  // CARGAR ASIGNACIONES DEL DOCENTE
   // =====================================
 
   const cargarAsignaciones =
@@ -367,7 +370,7 @@ export default function EstudiantesDocente() {
     );
 
   // =====================================
-  // LIMPIAR QR
+  // LIBERAR URL DEL QR
   // =====================================
 
   useEffect(
@@ -386,7 +389,7 @@ export default function EstudiantesDocente() {
   );
 
   // =====================================
-  // QR
+  // OBTENER QR
   // =====================================
 
   const cargarQr =
@@ -431,7 +434,7 @@ export default function EstudiantesDocente() {
     };
 
   // =====================================
-  // REGISTRAR
+  // REGISTRAR ESTUDIANTE
   // =====================================
 
   const registrarEstudiante =
@@ -491,6 +494,11 @@ export default function EstudiantesDocente() {
           await api.post(
             '/estudiantes',
             {
+              codigo_estudiante:
+                valores.codigo_estudiante
+                  .trim()
+                  .toUpperCase(),
+
               nombres:
                 valores.nombres.trim(),
 
@@ -506,7 +514,7 @@ export default function EstudiantesDocente() {
             .datos;
 
         // =================================
-        // INSCRIBIRLO EN LA CLASE
+        // INSCRIBIR EN LA CLASE
         // =================================
 
         await api.post(
@@ -536,12 +544,14 @@ export default function EstudiantesDocente() {
           estudiante.id,
         );
 
-        // Dejamos la clase seleccionada
-        // para registrar varios alumnos
-        // seguidos facilmente.
+        // =================================
+        // LIMPIAR DATOS DEL ALUMNO
+        // PERO CONSERVAR LA CLASE
+        // =================================
 
         form.resetFields(
           [
+            'codigo_estudiante',
             'nombres',
             'apellidos',
           ],
@@ -567,7 +577,7 @@ export default function EstudiantesDocente() {
     };
 
   // =====================================
-  // CARGA
+  // CARGANDO
   // =====================================
 
   if (cargando) {
@@ -611,6 +621,10 @@ export default function EstudiantesDocente() {
           24,
       }}
     >
+      {/* ================================= */}
+      {/* REGRESAR */}
+      {/* ================================= */}
+
       <Button
         icon={
           <ArrowLeftOutlined />
@@ -628,6 +642,10 @@ export default function EstudiantesDocente() {
         Regresar
       </Button>
 
+      {/* ================================= */}
+      {/* TITULO */}
+      {/* ================================= */}
+
       <Title level={2}>
         Estudiantes
       </Title>
@@ -639,6 +657,10 @@ export default function EstudiantesDocente() {
         y seleccione la clase a
         la que pertenece.
       </Text>
+
+      {/* ================================= */}
+      {/* FORMULARIO */}
+      {/* ================================= */}
 
       <Card
         title={
@@ -719,7 +741,7 @@ export default function EstudiantesDocente() {
             </Form.Item>
 
             {/* ========================= */}
-            {/* CURSOS AUTOMATICOS */}
+            {/* CURSOS DE LA CLASE */}
             {/* ========================= */}
 
             {claseSeleccionada && (
@@ -763,7 +785,53 @@ export default function EstudiantesDocente() {
             )}
 
             {/* ========================= */}
-            {/* DATOS PERSONALES */}
+            {/* CARNET */}
+            {/* ========================= */}
+
+            <Form.Item
+              name="codigo_estudiante"
+              label="Carnet o codigo del estudiante"
+              extra="Ingrese el carnet que utiliza el estudiante en el establecimiento."
+              rules={[
+                {
+                  required:
+                    true,
+
+                  message:
+                    'Ingrese el carnet o codigo del estudiante.',
+                },
+
+                {
+                  whitespace:
+                    true,
+
+                  message:
+                    'Ingrese un carnet valido.',
+                },
+
+                {
+                  max:
+                    30,
+
+                  message:
+                    'El carnet no puede superar 30 caracteres.',
+                },
+              ]}
+            >
+              <Input
+                size="large"
+                prefix={
+                  <IdcardOutlined />
+                }
+                placeholder="Ejemplo: 2026-001"
+                maxLength={
+                  30
+                }
+              />
+            </Form.Item>
+
+            {/* ========================= */}
+            {/* NOMBRES Y APELLIDOS */}
             {/* ========================= */}
 
             <Row
@@ -843,6 +911,10 @@ export default function EstudiantesDocente() {
               </Col>
             </Row>
 
+            {/* ========================= */}
+            {/* REGISTRAR */}
+            {/* ========================= */}
+
             <Button
               type="primary"
               htmlType="submit"
@@ -879,6 +951,10 @@ export default function EstudiantesDocente() {
                 24,
               ]}
             >
+              {/* ========================= */}
+              {/* INFORMACION */}
+              {/* ========================= */}
+
               <Col
                 xs={24}
                 md={14}
@@ -898,6 +974,21 @@ export default function EstudiantesDocente() {
                       20,
                   }}
                 >
+                  <Text strong>
+                    Carnet / codigo:
+                  </Text>
+
+                  <br />
+
+                  <Text>
+                    {
+                      estudianteCreado.codigo_estudiante
+                    }
+                  </Text>
+
+                  <br />
+                  <br />
+
                   <Text strong>
                     Clase:
                   </Text>
@@ -955,28 +1046,16 @@ export default function EstudiantesDocente() {
                     El estudiante
                     queda inscrito
                     automaticamente
-                    en los cursos de
-                    esta clase.
-                  </Text>
-
-                  <br />
-                  <br />
-
-                  <Text strong>
-                    Codigo interno:
-                  </Text>
-
-                  <br />
-
-                  <Text
-                    type="secondary"
-                  >
-                    {
-                      estudianteCreado.codigo_estudiante
-                    }
+                    en todos los
+                    cursos asociados
+                    a esta clase.
                   </Text>
                 </div>
               </Col>
+
+              {/* ========================= */}
+              {/* QR */}
+              {/* ========================= */}
 
               <Col
                 xs={24}
@@ -1016,9 +1095,11 @@ export default function EstudiantesDocente() {
                     <Text
                       type="secondary"
                     >
-                      Este sera el QR
-                      utilizado para
-                      tomar asistencia.
+                      Este QR se
+                      utilizara para
+                      registrar la
+                      asistencia del
+                      estudiante.
                     </Text>
                   </>
                 ) : (
