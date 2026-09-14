@@ -18,6 +18,8 @@ import EstudiantesDocente from './paginas/EstudiantesDocente';
 
 import TomarAsistencia from './paginas/TomarAsistencia';
 
+import HistorialAsistencias from './paginas/HistorialAsistencias';
+
 import Estudiantes from './paginas/Estudiantes';
 
 import Docentes from './paginas/Docentes';
@@ -145,6 +147,13 @@ function App() {
           path="/docente/asistencia"
           element={
             <TomarAsistencia />
+          }
+        />
+
+        <Route
+          path="/docente/historial-asistencias"
+          element={
+            <HistorialAsistencias />
           }
         />
       </Route>

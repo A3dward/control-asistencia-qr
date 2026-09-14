@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  HistoryOutlined,
   LogoutOutlined,
   QrcodeOutlined,
   UserAddOutlined,
@@ -105,7 +106,8 @@ export default function DocenteDashboard() {
 
         <Col
           xs={24}
-          md={8}
+          sm={12}
+          lg={6}
         >
           <Card
             hoverable
@@ -155,7 +157,8 @@ export default function DocenteDashboard() {
 
         <Col
           xs={24}
-          md={8}
+          sm={12}
+          lg={6}
         >
           <Card
             hoverable
@@ -205,7 +208,8 @@ export default function DocenteDashboard() {
 
         <Col
           xs={24}
-          md={8}
+          sm={12}
+          lg={6}
         >
           <Card
             hoverable
@@ -247,6 +251,60 @@ export default function DocenteDashboard() {
                 }
               >
                 Tomar asistencia
+              </Button>
+            </div>
+          </Card>
+        </Col>
+
+        {/* ================================= */}
+        {/* HISTORIAL */}
+        {/* ================================= */}
+
+        <Col
+          xs={24}
+          sm={12}
+          lg={6}
+        >
+          <Card
+            hoverable
+          >
+            <HistoryOutlined
+              className="dashboard-icono"
+            />
+
+            <Title
+              level={4}
+            >
+              Historial / Reportes
+            </Title>
+
+            <Text
+              type="secondary"
+            >
+              Consulte asistencias
+              anteriores, fechas,
+              horarios y resultados.
+            </Text>
+
+            <div
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <Button
+                type="primary"
+                block
+                icon={
+                  <HistoryOutlined />
+                }
+                onClick={() =>
+                  navigate(
+                    '/docente/historial-asistencias',
+                  )
+                }
+              >
+                Ver historial
               </Button>
             </div>
           </Card>
