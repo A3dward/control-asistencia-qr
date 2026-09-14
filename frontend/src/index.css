@@ -200,7 +200,9 @@ textarea {
     rgba(31, 78, 104, 0.10);
 }
 
-/* LADO INSTITUCIONAL */
+/* =====================================
+   LOGIN - LADO INSTITUCIONAL
+===================================== */
 
 .login-presentacion {
   min-height:
@@ -364,7 +366,9 @@ textarea {
     13px;
 }
 
-/* FORMULARIO */
+/* =====================================
+   LOGIN - FORMULARIO
+===================================== */
 
 .login-formulario {
   display:
@@ -466,8 +470,6 @@ textarea {
     0 auto;
 }
 
-/* MARCA SUPERIOR */
-
 .dashboard-marca {
   display:
     flex;
@@ -547,8 +549,6 @@ textarea {
     12px;
 }
 
-/* ENCABEZADO */
-
 .dashboard-encabezado {
   display:
     flex;
@@ -617,8 +617,6 @@ textarea {
   color:
     var(--color-texto-secundario);
 }
-
-/* SECCIONES */
 
 .dashboard-seccion {
   margin-top:
@@ -760,8 +758,6 @@ textarea {
     20px;
 }
 
-/* Compatibilidad anterior */
-
 .dashboard-icono {
   color:
     var(--color-principal);
@@ -771,7 +767,7 @@ textarea {
 }
 
 /* =====================================
-   ACCIÓN PRINCIPAL DOCENTE
+   ACCION PRINCIPAL DOCENTE
 ===================================== */
 
 .dashboard-accion-principal {
@@ -1093,7 +1089,7 @@ textarea {
 }
 
 /* =====================================
-   RESPONSIVE
+   TABLET
 ===================================== */
 
 @media (
@@ -1106,11 +1102,17 @@ textarea {
 
     grid-template-columns:
       1fr;
+
+    grid-template-rows:
+      auto auto;
   }
 
   .login-presentacion {
     min-height:
       auto;
+
+    justify-content:
+      flex-start;
 
     padding:
       30px;
@@ -1118,7 +1120,10 @@ textarea {
 
   .login-presentacion-contenido {
     margin:
-      36px 0;
+      34px 0 8px 0;
+
+    max-width:
+      none;
   }
 
   .login-presentacion-titulo {
@@ -1136,6 +1141,10 @@ textarea {
       34px 30px;
   }
 }
+
+/* =====================================
+   MOVIL
+===================================== */
 
 @media (
   max-width:
@@ -1179,11 +1188,21 @@ textarea {
   }
 }
 
+/* =====================================
+   TELEFONOS
+===================================== */
+
 @media (
   max-width:
     480px
 ) {
   .login-pagina {
+    display:
+      block;
+
+    min-height:
+      100vh;
+
     padding:
       0;
 
@@ -1192,8 +1211,17 @@ textarea {
   }
 
   .login-contenedor {
+    display:
+      block;
+
+    width:
+      100%;
+
     min-height:
       100vh;
+
+    max-width:
+      none;
 
     border:
       none;
@@ -1205,24 +1233,174 @@ textarea {
       none;
   }
 
+  /* ===================================
+     BLOQUE AZUL SUPERIOR
+  =================================== */
+
   .login-presentacion {
+    min-height:
+      320px;
+
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    justify-content:
+      center;
+
+    align-items:
+      center;
+
     padding:
-      26px 22px;
+      30px 24px;
+
+    text-align:
+      center;
   }
 
-  .login-presentacion-contenido {
+  /* MARCA */
+
+  .login-marca {
+    width:
+      100%;
+
+    justify-content:
+      center;
+
+    gap:
+      14px;
+
     margin:
-      28px 0 12px 0;
+      0 0 38px 0;
+  }
+
+  .login-marca-icono {
+    width:
+      48px;
+
+    height:
+      48px;
+
+    border-radius:
+      10px;
+
+    font-size:
+      24px;
+  }
+
+  .login-marca-texto {
+    text-align:
+      left;
+  }
+
+  .login-marca-nombre {
+    font-size:
+      16px;
+
+    line-height:
+      1.25;
+  }
+
+  .login-marca-subtitulo {
+    margin-top:
+      3px;
+
+    font-size:
+      13px;
+  }
+
+  /* CONTENIDO CENTRAL */
+
+  .login-presentacion-contenido {
+    width:
+      100%;
+
+    max-width:
+      330px;
+
+    margin:
+      0;
+
+    text-align:
+      center;
+  }
+
+  .login-etiqueta {
+    display:
+      block;
+
+    margin:
+      0 0 14px 0;
+
+    font-size:
+      13px;
+
+    letter-spacing:
+      0.8px;
+  }
+
+  .login-presentacion-titulo {
+    display:
+      none;
   }
 
   .login-presentacion-texto {
+    margin:
+      0 auto;
+
+    max-width:
+      310px;
+
     font-size:
-      14px;
+      15px;
+
+    line-height:
+      1.5;
+
+    text-align:
+      center;
   }
 
+  .login-presentacion-pie {
+    display:
+      none;
+  }
+
+  /* ===================================
+     FORMULARIO
+  =================================== */
+
   .login-formulario {
+    display:
+      block;
+
     padding:
-      30px 22px;
+      38px 22px 34px 22px;
+  }
+
+  .login-encabezado {
+    margin-bottom:
+      28px;
+  }
+
+  .login-titulo {
+    font-size:
+      27px !important;
+  }
+
+  .login-descripcion {
+    font-size:
+      14px;
+
+    line-height:
+      1.5;
+  }
+
+  .login-boton {
+    height:
+      46px !important;
   }
 
   .dashboard-pagina {
