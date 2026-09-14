@@ -2,6 +2,7 @@ import {
   ApartmentOutlined,
   BookOutlined,
   LogoutOutlined,
+  QrcodeOutlined,
   ReadOutlined,
   SolutionOutlined,
   TeamOutlined,
@@ -39,257 +40,462 @@ export default function AdminDashboard() {
   } =
     useAutenticacion();
 
-  const salir = () => {
-    cerrarSesion();
+  // =====================================
+  // SALIR
+  // =====================================
 
-    navigate(
-      '/login',
-      {
-        replace:
-          true,
-      },
-    );
-  };
+  const salir =
+    () => {
+      cerrarSesion();
+
+      navigate(
+        '/login',
+        {
+          replace:
+            true,
+        },
+      );
+    };
+
+  // =====================================
+  // VISTA
+  // =====================================
 
   return (
     <div
       className="dashboard-pagina"
     >
       <div
-        className="dashboard-encabezado"
+        className="dashboard-contenido"
       >
-        <div>
-          <Title
-            level={2}
-            style={{
-              marginBottom:
-                4,
-            }}
-          >
-            Panel de Administracion
-          </Title>
+        {/* ================================= */}
+        {/* MARCA */}
+        {/* ================================= */}
 
-          <Text
-            type="secondary"
+        <div
+          className="dashboard-marca"
+        >
+          <div
+            className="dashboard-marca-icono"
           >
-            Bienvenido,{' '}
-            {
-              usuario?.nombre_completo
-            }
-          </Text>
+            <QrcodeOutlined />
+          </div>
+
+          <div
+            className="dashboard-marca-texto"
+          >
+            <span
+              className="dashboard-marca-titulo"
+            >
+              Control de Asistencia
+            </span>
+
+            <span
+              className="dashboard-marca-subtitulo"
+            >
+              INEB de Telesecundaria ·
+              Aldea Cabañas
+            </span>
+          </div>
         </div>
 
-        <Button
-          danger
-          icon={
-            <LogoutOutlined />
-          }
-          onClick={
-            salir
-          }
+        {/* ================================= */}
+        {/* ENCABEZADO */}
+        {/* ================================= */}
+
+        <div
+          className="dashboard-encabezado"
         >
-          Cerrar sesion
-        </Button>
+          <div>
+            <span
+              className="dashboard-rol"
+            >
+              Administración
+            </span>
+
+            <Title
+              level={2}
+              className="dashboard-titulo"
+            >
+              Panel administrativo
+            </Title>
+
+            <Text
+              className="dashboard-bienvenida"
+            >
+              Bienvenido,{' '}
+              {
+                usuario?.nombre_completo
+              }
+            </Text>
+          </div>
+
+          <Button
+            danger
+            icon={
+              <LogoutOutlined />
+            }
+            onClick={
+              salir
+            }
+          >
+            Cerrar sesión
+          </Button>
+        </div>
+
+        {/* ================================= */}
+        {/* PERSONAS */}
+        {/* ================================= */}
+
+        <section
+          className="dashboard-seccion"
+        >
+          <div
+            className="dashboard-seccion-encabezado"
+          >
+            <Title
+              level={4}
+              className="dashboard-seccion-titulo"
+            >
+              Personas
+            </Title>
+
+            <Text
+              className="dashboard-seccion-texto"
+            >
+              Administre estudiantes
+              y docentes del
+              establecimiento.
+            </Text>
+          </div>
+
+          <Row
+            gutter={[
+              16,
+              16,
+            ]}
+          >
+            {/* ESTUDIANTES */}
+
+            <Col
+              xs={24}
+              md={12}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <UserOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Estudiantes
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Registre estudiantes,
+                  consulte sus datos y
+                  asígnelos a una clase.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/estudiantes',
+                      )
+                    }
+                  >
+                    Administrar estudiantes
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* DOCENTES */}
+
+            <Col
+              xs={24}
+              md={12}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <TeamOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Docentes
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Registre y mantenga
+                  actualizada la
+                  información de los
+                  docentes.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/docentes',
+                      )
+                    }
+                  >
+                    Administrar docentes
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </section>
+
+        {/* ================================= */}
+        {/* CONFIGURACION */}
+        {/* ================================= */}
+
+        <section
+          className="dashboard-seccion"
+        >
+          <div
+            className="dashboard-seccion-encabezado"
+          >
+            <Title
+              level={4}
+              className="dashboard-seccion-titulo"
+            >
+              Configuración académica
+            </Title>
+
+            <Text
+              className="dashboard-seccion-texto"
+            >
+              Defina las clases,
+              cursos y asignaciones
+              que utilizarán los
+              docentes.
+            </Text>
+          </div>
+
+          <Row
+            gutter={[
+              16,
+              16,
+            ]}
+          >
+            {/* CLASES */}
+
+            <Col
+              xs={24}
+              sm={12}
+              lg={6}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <ReadOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Clases
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Administre grados,
+                  secciones y ciclos.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/secciones',
+                      )
+                    }
+                  >
+                    Ver clases
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* CURSOS */}
+
+            <Col
+              xs={24}
+              sm={12}
+              lg={6}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <BookOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Cursos
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Cree y administre
+                  los cursos del ciclo.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/cursos',
+                      )
+                    }
+                  >
+                    Ver cursos
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* CURSOS POR CLASE */}
+
+            <Col
+              xs={24}
+              sm={12}
+              lg={6}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <ApartmentOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Cursos por clase
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Indique qué cursos
+                  corresponden a cada
+                  clase.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/cursos-clases',
+                      )
+                    }
+                  >
+                    Configurar
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* ASIGNACIONES */}
+
+            <Col
+              xs={24}
+              sm={12}
+              lg={6}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <SolutionOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Asignaciones
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Asigne clases a los
+                  docentes responsables.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/admin/asignaciones',
+                      )
+                    }
+                  >
+                    Ver asignaciones
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </section>
       </div>
-
-      <Row
-        gutter={[
-          16,
-          16,
-        ]}
-      >
-        {/* ESTUDIANTES */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/estudiantes',
-              )
-            }
-          >
-            <UserOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Estudiantes
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Registrar estudiantes y asignar su clase.
-            </Text>
-          </Card>
-        </Col>
-
-        {/* DOCENTES */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/docentes',
-              )
-            }
-          >
-            <TeamOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Docentes
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Gestionar docentes del establecimiento.
-            </Text>
-          </Card>
-        </Col>
-
-        {/* CLASES */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/secciones',
-              )
-            }
-          >
-            <ReadOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Clases
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Administrar grados, secciones y ciclos.
-            </Text>
-          </Card>
-        </Col>
-
-        {/* CURSOS */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/cursos',
-              )
-            }
-          >
-            <BookOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Cursos
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Crear y administrar los cursos.
-            </Text>
-          </Card>
-        </Col>
-
-        {/* CURSOS POR CLASE */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/cursos-clases',
-              )
-            }
-          >
-            <ApartmentOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Cursos por clase
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              ASigna cursos a las clases.
-            </Text>
-          </Card>
-        </Col>
-
-        {/* ASIGNACIONES */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={8}
-        >
-          <Card
-            hoverable
-            className="dashboard-card"
-            onClick={() =>
-              navigate(
-                '/admin/asignaciones',
-              )
-            }
-          >
-            <SolutionOutlined
-              className="dashboard-icono"
-            />
-
-            <Title level={4}>
-              Asignaciones
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Asignar clases completas a los docentes.
-            </Text>
-          </Card>
-        </Col>
-      </Row>
     </div>
   );
 }

@@ -29,7 +29,53 @@ createRoot(
 ).render(
   <StrictMode>
     <BrowserRouter>
-      <ConfigProvider>
+      <ConfigProvider
+        theme={{
+          token: {
+            colorPrimary:
+              '#1f4e68',
+
+            colorInfo:
+              '#1f4e68',
+
+            colorSuccess:
+              '#2e7d32',
+
+            colorWarning:
+              '#b7791f',
+
+            colorError:
+              '#b42318',
+
+            colorText:
+              '#1f2937',
+
+            colorTextSecondary:
+              '#667085',
+
+            colorBgLayout:
+              '#f4f6f8',
+
+            colorBgContainer:
+              '#ffffff',
+
+            colorBorder:
+              '#e4e7ec',
+
+            borderRadius:
+              8,
+
+            borderRadiusLG:
+              12,
+
+            controlHeight:
+              40,
+
+            fontFamily:
+              '"Segoe UI", Arial, Helvetica, sans-serif',
+          },
+        }}
+      >
         <AutenticacionProvider>
           <App />
         </AutenticacionProvider>

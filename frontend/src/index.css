@@ -1,3 +1,42 @@
+/* =====================================
+   VARIABLES GENERALES
+===================================== */
+
+:root {
+  --color-principal: #1f4e68;
+  --color-principal-oscuro: #173a4f;
+  --color-principal-suave: #eaf1f5;
+
+  --color-fondo: #f4f6f8;
+  --color-superficie: #ffffff;
+
+  --color-texto: #1f2937;
+  --color-texto-secundario: #667085;
+
+  --color-borde: #e4e7ec;
+
+  --color-verde: #2e7d32;
+  --color-verde-suave: #edf7ee;
+
+  --color-rojo: #b42318;
+  --color-rojo-suave: #fff1f0;
+
+  --color-amarillo: #b7791f;
+  --color-amarillo-suave: #fff8e6;
+
+  --sombra-suave:
+    0 2px 8px
+    rgba(16, 24, 40, 0.05);
+
+  --sombra-card:
+    0 8px 24px
+    rgba(16, 24, 40, 0.07);
+}
+
+/* =====================================
+   BASE
+===================================== */
+
 * {
   box-sizing: border-box;
 }
@@ -16,15 +55,94 @@ body {
   margin: 0;
 
   background:
-    #f5f5f5;
+    var(--color-fondo);
+
+  color:
+    var(--color-texto);
 
   font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
     "Segoe UI",
+    Arial,
+    Helvetica,
     sans-serif;
+
+  -webkit-font-smoothing:
+    antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family:
+    inherit;
+}
+
+/* =====================================
+   ANT DESIGN - AJUSTES GENERALES
+===================================== */
+
+.ant-btn {
+  font-weight: 600;
+
+  box-shadow:
+    none;
+}
+
+.ant-btn-primary {
+  box-shadow:
+    none;
+}
+
+.ant-card {
+  border-color:
+    var(--color-borde);
+
+  box-shadow:
+    var(--sombra-suave);
+}
+
+.ant-card-head {
+  border-bottom-color:
+    var(--color-borde);
+}
+
+.ant-table-wrapper {
+  overflow:
+    hidden;
+
+  border-radius:
+    10px;
+}
+
+.ant-table-thead
+  > tr
+  > th {
+  font-weight:
+    600 !important;
+
+  color:
+    #344054 !important;
+
+  background:
+    #f8fafc !important;
+}
+
+.ant-modal-content {
+  border-radius:
+    12px !important;
+}
+
+.ant-alert {
+  border-radius:
+    8px;
+}
+
+.ant-select-selector,
+.ant-input,
+.ant-input-affix-wrapper {
+  border-radius:
+    8px !important;
 }
 
 /* =====================================
@@ -32,80 +150,298 @@ body {
 ===================================== */
 
 .login-pagina {
-  min-height: 100vh;
+  min-height:
+    100vh;
 
-  display: flex;
+  display:
+    flex;
 
-  align-items: center;
+  align-items:
+    center;
 
-  justify-content: center;
+  justify-content:
+    center;
 
-  padding: 24px;
+  padding:
+    32px 20px;
 
   background:
-    linear-gradient(
-      135deg,
-      #f5f7fa 0%,
-      #e8edf5 100%
-    );
+    #eef3f6;
 }
 
-.login-card {
-  width: 100%;
+.login-contenedor {
+  width:
+    100%;
 
-  max-width: 430px;
+  max-width:
+    980px;
 
-  border-radius: 16px;
+  display:
+    grid;
+
+  grid-template-columns:
+    1.05fr 0.95fr;
+
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    #dfe5e9;
+
+  border-radius:
+    16px;
+
+  background:
+    white;
 
   box-shadow:
-    0 12px 40px
-    rgba(
-      0,
-      0,
-      0,
-      0.10
-    );
+    0 18px 50px
+    rgba(31, 78, 104, 0.10);
 }
 
-.login-encabezado {
-  text-align: center;
+/* LADO INSTITUCIONAL */
 
-  margin-bottom: 28px;
-}
+.login-presentacion {
+  min-height:
+    560px;
 
-.login-icono {
-  width: 68px;
+  display:
+    flex;
 
-  height: 68px;
+  flex-direction:
+    column;
 
-  margin:
-    0 auto
-    16px auto;
+  justify-content:
+    space-between;
 
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  border-radius: 16px;
-
-  background:
-    #1677ff;
+  padding:
+    52px;
 
   color:
     white;
 
-  font-size: 34px;
+  background:
+    var(--color-principal);
+}
+
+.login-marca {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    12px;
+}
+
+.login-marca-icono {
+  width:
+    46px;
+
+  height:
+    46px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  flex-shrink:
+    0;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.30);
+
+  border-radius:
+    10px;
+
+  background:
+    rgba(255, 255, 255, 0.10);
+
+  font-size:
+    24px;
+}
+
+.login-marca-nombre {
+  margin:
+    0;
+
+  color:
+    white;
+
+  font-size:
+    15px;
+
+  font-weight:
+    700;
+}
+
+.login-marca-subtitulo {
+  display:
+    block;
+
+  margin-top:
+    2px;
+
+  color:
+    rgba(255, 255, 255, 0.72);
+
+  font-size:
+    13px;
+}
+
+.login-presentacion-contenido {
+  max-width:
+    420px;
+}
+
+.login-etiqueta {
+  display:
+    inline-block;
+
+  margin-bottom:
+    14px;
+
+  color:
+    rgba(255, 255, 255, 0.76);
+
+  font-size:
+    13px;
+
+  font-weight:
+    600;
+
+  letter-spacing:
+    0.5px;
+
+  text-transform:
+    uppercase;
+}
+
+.login-presentacion-titulo {
+  margin:
+    0 0 16px 0;
+
+  color:
+    white;
+
+  font-size:
+    34px;
+
+  line-height:
+    1.2;
+
+  font-weight:
+    700;
+}
+
+.login-presentacion-texto {
+  margin:
+    0;
+
+  color:
+    rgba(255, 255, 255, 0.82);
+
+  font-size:
+    16px;
+
+  line-height:
+    1.65;
+}
+
+.login-presentacion-pie {
+  color:
+    rgba(255, 255, 255, 0.65);
+
+  font-size:
+    13px;
+}
+
+/* FORMULARIO */
+
+.login-formulario {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  padding:
+    48px;
+}
+
+.login-card {
+  width:
+    100%;
+
+  border:
+    none !important;
+
+  box-shadow:
+    none !important;
+}
+
+.login-card
+  .ant-card-body {
+  padding:
+    0;
+}
+
+.login-encabezado {
+  margin-bottom:
+    30px;
+}
+
+.login-icono {
+  display:
+    none;
 }
 
 .login-titulo {
   margin-bottom:
-    6px !important;
+    8px !important;
+
+  color:
+    var(--color-texto) !important;
+
+  font-size:
+    26px !important;
+}
+
+.login-descripcion {
+  display:
+    block;
+
+  max-width:
+    340px;
+
+  color:
+    var(--color-texto-secundario);
+
+  line-height:
+    1.5;
+}
+
+.login-boton {
+  height:
+    44px !important;
+
+  margin-top:
+    4px;
+
+  border-radius:
+    8px !important;
 }
 
 /* =====================================
-   DASHBOARD
+   DASHBOARD GENERAL
 ===================================== */
 
 .dashboard-pagina {
@@ -113,11 +449,105 @@ body {
     100vh;
 
   padding:
-    32px;
+    28px;
 
   background:
-    #f5f5f5;
+    var(--color-fondo);
 }
+
+.dashboard-contenido {
+  width:
+    100%;
+
+  max-width:
+    1180px;
+
+  margin:
+    0 auto;
+}
+
+/* MARCA SUPERIOR */
+
+.dashboard-marca {
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    11px;
+
+  margin-bottom:
+    20px;
+}
+
+.dashboard-marca-icono {
+  width:
+    38px;
+
+  height:
+    38px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  flex-shrink:
+    0;
+
+  border-radius:
+    9px;
+
+  background:
+    var(--color-principal);
+
+  color:
+    white;
+
+  font-size:
+    20px;
+}
+
+.dashboard-marca-texto {
+  line-height:
+    1.2;
+}
+
+.dashboard-marca-titulo {
+  display:
+    block;
+
+  color:
+    var(--color-texto);
+
+  font-size:
+    14px;
+
+  font-weight:
+    700;
+}
+
+.dashboard-marca-subtitulo {
+  display:
+    block;
+
+  margin-top:
+    3px;
+
+  color:
+    var(--color-texto-secundario);
+
+  font-size:
+    12px;
+}
+
+/* ENCABEZADO */
 
 .dashboard-encabezado {
   display:
@@ -130,42 +560,342 @@ body {
     center;
 
   gap:
-    20px;
+    24px;
 
   margin-bottom:
-    30px;
+    28px;
+
+  padding:
+    26px 28px;
+
+  border:
+    1px solid
+    var(--color-borde);
+
+  border-radius:
+    12px;
+
+  background:
+    var(--color-superficie);
+
+  box-shadow:
+    var(--sombra-suave);
 }
+
+.dashboard-rol {
+  display:
+    inline-block;
+
+  margin-bottom:
+    6px;
+
+  color:
+    var(--color-principal);
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.5px;
+
+  text-transform:
+    uppercase;
+}
+
+.dashboard-titulo {
+  margin:
+    0 0 4px 0 !important;
+
+  color:
+    var(--color-texto) !important;
+}
+
+.dashboard-bienvenida {
+  color:
+    var(--color-texto-secundario);
+}
+
+/* SECCIONES */
+
+.dashboard-seccion {
+  margin-top:
+    28px;
+}
+
+.dashboard-seccion-encabezado {
+  margin-bottom:
+    16px;
+}
+
+.dashboard-seccion-titulo {
+  margin:
+    0 0 4px 0 !important;
+
+  color:
+    var(--color-texto) !important;
+}
+
+.dashboard-seccion-texto {
+  color:
+    var(--color-texto-secundario);
+}
+
+/* =====================================
+   TARJETAS DASHBOARD
+===================================== */
 
 .dashboard-card {
   height:
     100%;
 
+  border:
+    1px solid
+    var(--color-borde) !important;
+
+  border-radius:
+    12px !important;
+
+  background:
+    white;
+
+  box-shadow:
+    var(--sombra-suave);
+
   transition:
-    transform
-    0.2s ease,
+    border-color
+    0.18s ease,
     box-shadow
-    0.2s ease;
+    0.18s ease,
+    transform
+    0.18s ease;
 }
 
 .dashboard-card:hover {
   transform:
     translateY(
-      -3px
+      -2px
     );
+
+  border-color:
+    #c8d6df !important;
+
+  box-shadow:
+    var(--sombra-card);
 }
 
+.dashboard-card
+  .ant-card-body {
+  height:
+    100%;
+
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  padding:
+    22px;
+}
+
+.dashboard-card-icono {
+  width:
+    44px;
+
+  height:
+    44px;
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
+  margin-bottom:
+    18px;
+
+  border-radius:
+    10px;
+
+  background:
+    var(--color-principal-suave);
+
+  color:
+    var(--color-principal);
+
+  font-size:
+    22px;
+}
+
+.dashboard-card-titulo {
+  margin:
+    0 0 7px 0 !important;
+
+  color:
+    var(--color-texto) !important;
+}
+
+.dashboard-card-texto {
+  min-height:
+    44px;
+
+  color:
+    var(--color-texto-secundario);
+
+  line-height:
+    1.5;
+}
+
+.dashboard-card-accion {
+  margin-top:
+    auto;
+
+  padding-top:
+    20px;
+}
+
+/* Compatibilidad anterior */
+
 .dashboard-icono {
+  color:
+    var(--color-principal);
+
+  font-size:
+    30px;
+}
+
+/* =====================================
+   ACCIÓN PRINCIPAL DOCENTE
+===================================== */
+
+.dashboard-accion-principal {
+  position:
+    relative;
+
+  overflow:
+    hidden;
+
+  border:
+    none !important;
+
+  border-radius:
+    14px !important;
+
+  background:
+    var(--color-principal) !important;
+
+  color:
+    white;
+
+  box-shadow:
+    0 12px 28px
+    rgba(31, 78, 104, 0.18);
+}
+
+.dashboard-accion-principal
+  .ant-card-body {
+  position:
+    relative;
+
+  z-index:
+    2;
+
+  padding:
+    30px;
+}
+
+.dashboard-accion-principal::after {
+  content:
+    "";
+
+  position:
+    absolute;
+
+  width:
+    220px;
+
+  height:
+    220px;
+
+  right:
+    -80px;
+
+  bottom:
+    -120px;
+
+  border-radius:
+    50%;
+
+  background:
+    rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-accion-etiqueta {
   display:
     block;
 
   margin-bottom:
-    15px;
-
-  font-size:
-    34px;
+    8px;
 
   color:
-    #1677ff;
+    rgba(255, 255, 255, 0.72);
+
+  font-size:
+    12px;
+
+  font-weight:
+    700;
+
+  letter-spacing:
+    0.4px;
+
+  text-transform:
+    uppercase;
+}
+
+.dashboard-accion-titulo {
+  margin:
+    0 0 8px 0 !important;
+
+  color:
+    white !important;
+}
+
+.dashboard-accion-texto {
+  display:
+    block;
+
+  max-width:
+    560px;
+
+  color:
+    rgba(255, 255, 255, 0.78) !important;
+
+  line-height:
+    1.55;
+}
+
+.dashboard-accion-boton {
+  margin-top:
+    22px;
+
+  border:
+    none !important;
+
+  background:
+    white !important;
+
+  color:
+    var(--color-principal) !important;
+
+  font-weight:
+    700 !important;
 }
 
 /* =====================================
@@ -177,10 +907,22 @@ body {
     100vh;
 
   padding:
-    32px;
+    28px;
 
   background:
-    #f5f5f5;
+    var(--color-fondo);
+}
+
+.pagina-administracion
+  > * {
+  max-width:
+    1200px;
+
+  margin-left:
+    auto;
+
+  margin-right:
+    auto;
 }
 
 .pagina-encabezado {
@@ -197,15 +939,40 @@ body {
     20px;
 
   margin-bottom:
-    24px;
+    22px;
 }
 
 .boton-regresar {
   margin-left:
-    -12px;
+    -8px;
 
   margin-bottom:
     8px;
+}
+
+/* =====================================
+   CARDS, ESTADISTICAS Y TABLAS
+===================================== */
+
+.ant-statistic-title {
+  color:
+    var(--color-texto-secundario) !important;
+
+  font-size:
+    13px !important;
+}
+
+.ant-statistic-content {
+  color:
+    var(--color-texto) !important;
+}
+
+.ant-tag {
+  border-radius:
+    999px;
+
+  font-weight:
+    600;
 }
 
 /* =====================================
@@ -253,6 +1020,19 @@ body {
 
   margin-top:
     20px;
+
+  padding:
+    20px;
+
+  border:
+    1px solid
+    var(--color-borde);
+
+  border-radius:
+    12px;
+
+  background:
+    #fafafa;
 }
 
 .qr-imagen {
@@ -264,6 +1044,31 @@ body {
 
   height:
     auto;
+}
+
+/* =====================================
+   LECTOR QR
+===================================== */
+
+#lector-qr-asistencia {
+  overflow:
+    hidden;
+
+  border:
+    1px solid
+    var(--color-borde) !important;
+
+  border-radius:
+    12px;
+
+  background:
+    #111827;
+}
+
+#lector-qr-asistencia
+  video {
+  border-radius:
+    12px;
 }
 
 /* =====================================
@@ -282,6 +1087,9 @@ body {
 
   justify-content:
     center;
+
+  background:
+    var(--color-fondo);
 }
 
 /* =====================================
@@ -290,12 +1098,53 @@ body {
 
 @media (
   max-width:
+    850px
+) {
+  .login-contenedor {
+    max-width:
+      500px;
+
+    grid-template-columns:
+      1fr;
+  }
+
+  .login-presentacion {
+    min-height:
+      auto;
+
+    padding:
+      30px;
+  }
+
+  .login-presentacion-contenido {
+    margin:
+      36px 0;
+  }
+
+  .login-presentacion-titulo {
+    font-size:
+      27px;
+  }
+
+  .login-presentacion-pie {
+    display:
+      none;
+  }
+
+  .login-formulario {
+    padding:
+      34px 30px;
+  }
+}
+
+@media (
+  max-width:
     768px
 ) {
   .dashboard-pagina,
   .pagina-administracion {
     padding:
-      20px;
+      18px;
   }
 
   .dashboard-encabezado,
@@ -307,9 +1156,77 @@ body {
       column;
   }
 
+  .dashboard-encabezado {
+    padding:
+      22px;
+  }
+
+  .dashboard-encabezado
+    > button {
+    width:
+      100%;
+  }
+
   .pagina-encabezado
     > button {
     width:
       100%;
+  }
+
+  .dashboard-card-texto {
+    min-height:
+      auto;
+  }
+}
+
+@media (
+  max-width:
+    480px
+) {
+  .login-pagina {
+    padding:
+      0;
+
+    background:
+      white;
+  }
+
+  .login-contenedor {
+    min-height:
+      100vh;
+
+    border:
+      none;
+
+    border-radius:
+      0;
+
+    box-shadow:
+      none;
+  }
+
+  .login-presentacion {
+    padding:
+      26px 22px;
+  }
+
+  .login-presentacion-contenido {
+    margin:
+      28px 0 12px 0;
+  }
+
+  .login-presentacion-texto {
+    font-size:
+      14px;
+  }
+
+  .login-formulario {
+    padding:
+      30px 22px;
+  }
+
+  .dashboard-pagina {
+    padding:
+      14px;
   }
 }

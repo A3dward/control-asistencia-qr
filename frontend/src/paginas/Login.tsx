@@ -34,9 +34,11 @@ const {
 } = Typography;
 
 interface FormularioLogin {
-  correo: string;
+  correo:
+    string;
 
-  contrasena: string;
+  contrasena:
+    string;
 }
 
 export default function Login() {
@@ -62,6 +64,10 @@ export default function Login() {
   ] =
     useState('');
 
+  // =====================================
+  // USUARIO YA AUTENTICADO
+  // =====================================
+
   if (
     autenticado &&
     usuario
@@ -79,13 +85,22 @@ export default function Login() {
     );
   }
 
+  // =====================================
+  // LOGIN
+  // =====================================
+
   const enviarFormulario =
     async (
       valores:
         FormularioLogin,
     ) => {
-      setError('');
-      setEnviando(true);
+      setError(
+        '',
+      );
+
+      setEnviando(
+        true,
+      );
 
       try {
         const usuarioLogin =
@@ -101,7 +116,8 @@ export default function Login() {
           navigate(
             '/admin',
             {
-              replace: true,
+              replace:
+                true,
             },
           );
 
@@ -111,10 +127,13 @@ export default function Login() {
         navigate(
           '/docente',
           {
-            replace: true,
+            replace:
+              true,
           },
         );
-      } catch (errorPeticion) {
+      } catch (
+        errorPeticion
+      ) {
         if (
           axios.isAxiosError(
             errorPeticion,
@@ -127,123 +146,221 @@ export default function Login() {
 
           setError(
             mensaje ??
-              'No fue posible iniciar sesion.',
+              'No fue posible iniciar sesión.',
           );
         } else {
           setError(
-            'Ocurrio un error inesperado.',
+            'Ocurrió un error inesperado.',
           );
         }
       } finally {
-        setEnviando(false);
+        setEnviando(
+          false,
+        );
       }
     };
 
+  // =====================================
+  // VISTA
+  // =====================================
+
   return (
-    <div className="login-pagina">
-      <Card
-        className="login-card"
-        bordered={false}
+    <div
+      className="login-pagina"
+    >
+      <div
+        className="login-contenedor"
       >
-        <div className="login-encabezado">
-          <div className="login-icono">
-            <QrcodeOutlined />
+        {/* ================================= */}
+        {/* PRESENTACION */}
+        {/* ================================= */}
+
+        <section
+          className="login-presentacion"
+        >
+          <div
+            className="login-marca"
+          >
+            <div
+              className="login-marca-icono"
+            >
+              <QrcodeOutlined />
+            </div>
+
+            <div>
+              <span
+                className="login-marca-nombre"
+              >
+                Control de Asistencia
+              </span>
+
+              <span
+                className="login-marca-subtitulo"
+              >
+                INEB de Telesecundaria
+              </span>
+            </div>
           </div>
 
-          <Title
-            level={2}
-            className="login-titulo"
+          <div
+            className="login-presentacion-contenido"
           >
-            Control de Asistencia
-          </Title>
+            <span
+              className="login-etiqueta"
+            >
+              Aldea Cabañas
+            </span>
 
-          <Text
-            type="secondary"
+            <h1
+              className="login-presentacion-titulo"
+            >
+              Registro de asistencia
+              de forma sencilla.
+            </h1>
+
+            <p
+              className="login-presentacion-texto"
+            >
+              Sistema web para el
+              control de estudiantes
+              y registro de asistencia
+              mediante código QR.
+            </p>
+          </div>
+
+          <div
+            className="login-presentacion-pie"
           >
-            Sistema de registro
-            de asistencia mediante
-            codigo QR
-          </Text>
-        </div>
+            Nuevo San Carlos,
+            Retalhuleu
+          </div>
+        </section>
 
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            showIcon
-            closable
-            onClose={() =>
-              setError('')
-            }
-            style={{
-              marginBottom: 20,
-            }}
-          />
-        )}
+        {/* ================================= */}
+        {/* FORMULARIO */}
+        {/* ================================= */}
 
-        <Form
-          layout="vertical"
-          onFinish={
-            enviarFormulario
-          }
-          autoComplete="off"
+        <section
+          className="login-formulario"
         >
-          <Form.Item
-            label="Correo"
-            name="correo"
-            rules={[
-              {
-                required: true,
-                message:
-                  'Ingrese su correo.',
-              },
-              {
-                type: 'email',
-                message:
-                  'Ingrese un correo valido.',
-              },
-            ]}
+          <Card
+            className="login-card"
+            bordered={false}
           >
-            <Input
-              prefix={
-                <MailOutlined />
-              }
-              placeholder="correo@escuela.com"
-              size="large"
-            />
-          </Form.Item>
+            <div
+              className="login-encabezado"
+            >
+              <Title
+                level={2}
+                className="login-titulo"
+              >
+                Iniciar sesión
+              </Title>
 
-          <Form.Item
-            label="Contraseña"
-            name="contrasena"
-            rules={[
-              {
-                required: true,
-                message:
-                  'Ingrese su contraseña.',
-              },
-            ]}
-          >
-            <Input.Password
-              prefix={
-                <LockOutlined />
-              }
-              placeholder="Contraseña"
-              size="large"
-            />
-          </Form.Item>
+              <Text
+                className="login-descripcion"
+              >
+                Ingrese sus
+                credenciales para
+                acceder al sistema.
+              </Text>
+            </div>
 
-          <Button
-            type="primary"
-            htmlType="submit"
-            size="large"
-            block
-            loading={enviando}
-          >
-            Iniciar sesion
-          </Button>
-        </Form>
-      </Card>
+            {error && (
+              <Alert
+                message={
+                  error
+                }
+                type="error"
+                showIcon
+                closable
+                onClose={() =>
+                  setError(
+                    '',
+                  )
+                }
+                style={{
+                  marginBottom:
+                    22,
+                }}
+              />
+            )}
+
+            <Form
+              layout="vertical"
+              onFinish={
+                enviarFormulario
+              }
+              autoComplete="off"
+            >
+              <Form.Item
+                label="Correo"
+                name="correo"
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Ingrese su correo.',
+                  },
+
+                  {
+                    type:
+                      'email',
+
+                    message:
+                      'Ingrese un correo válido.',
+                  },
+                ]}
+              >
+                <Input
+                  prefix={
+                    <MailOutlined />
+                  }
+                  placeholder="correo@escuela.com"
+                  size="large"
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="Contraseña"
+                name="contrasena"
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Ingrese su contraseña.',
+                  },
+                ]}
+              >
+                <Input.Password
+                  prefix={
+                    <LockOutlined />
+                  }
+                  placeholder="Ingrese su contraseña"
+                  size="large"
+                />
+              </Form.Item>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                block
+                loading={
+                  enviando
+                }
+                className="login-boton"
+              >
+                Iniciar sesión
+              </Button>
+            </Form>
+          </Card>
+        </section>
+      </div>
     </div>
   );
 }

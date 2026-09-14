@@ -37,279 +37,330 @@ export default function DocenteDashboard() {
   } =
     useAutenticacion();
 
-  const salir = () => {
-    cerrarSesion();
+  // =====================================
+  // CERRAR SESION
+  // =====================================
 
-    navigate(
-      '/login',
-      {
-        replace:
-          true,
-      },
-    );
-  };
+  const salir =
+    () => {
+      cerrarSesion();
+
+      navigate(
+        '/login',
+        {
+          replace:
+            true,
+        },
+      );
+    };
+
+  // =====================================
+  // VISTA
+  // =====================================
 
   return (
     <div
       className="dashboard-pagina"
     >
-      {/* ================================= */}
-      {/* ENCABEZADO */}
-      {/* ================================= */}
-
       <div
-        className="dashboard-encabezado"
+        className="dashboard-contenido"
       >
-        <div>
-          <Title
-            level={2}
-            style={{
-              marginBottom:
-                4,
-            }}
+        {/* ================================= */}
+        {/* MARCA */}
+        {/* ================================= */}
+
+        <div
+          className="dashboard-marca"
+        >
+          <div
+            className="dashboard-marca-icono"
           >
-            Docente
+            <QrcodeOutlined />
+          </div>
+
+          <div
+            className="dashboard-marca-texto"
+          >
+            <span
+              className="dashboard-marca-titulo"
+            >
+              Control de Asistencia
+            </span>
+
+            <span
+              className="dashboard-marca-subtitulo"
+            >
+              INEB de Telesecundaria ·
+              Aldea Cabañas
+            </span>
+          </div>
+        </div>
+
+        {/* ================================= */}
+        {/* ENCABEZADO */}
+        {/* ================================= */}
+
+        <div
+          className="dashboard-encabezado"
+        >
+          <div>
+            <span
+              className="dashboard-rol"
+            >
+              Docente
+            </span>
+
+            <Title
+              level={2}
+              className="dashboard-titulo"
+            >
+              Bienvenido
+            </Title>
+
+            <Text
+              className="dashboard-bienvenida"
+            >
+              {
+                usuario?.nombre_completo
+              }
+            </Text>
+          </div>
+
+          <Button
+            danger
+            icon={
+              <LogoutOutlined />
+            }
+            onClick={
+              salir
+            }
+          >
+            Cerrar sesión
+          </Button>
+        </div>
+
+        {/* ================================= */}
+        {/* ACCION PRINCIPAL */}
+        {/* ================================= */}
+
+        <Card
+          className="dashboard-accion-principal"
+        >
+          <span
+            className="dashboard-accion-etiqueta"
+          >
+            Acción principal
+          </span>
+
+          <Title
+            level={3}
+            className="dashboard-accion-titulo"
+          >
+            Tomar asistencia
           </Title>
 
           <Text
-            type="secondary"
+            className="dashboard-accion-texto"
           >
-            Bienvenido,{' '}
-            {
-              usuario?.nombre_completo
-            }
+            Seleccione su clase y
+            curso, abra la cámara y
+            registre la asistencia de
+            los estudiantes mediante
+            su código QR.
           </Text>
-        </div>
 
-        <Button
-          danger
-          icon={
-            <LogoutOutlined />
-          }
-          onClick={
-            salir
-          }
-        >
-          Cerrar sesion
-        </Button>
-      </div>
-
-      <Row
-        gutter={[
-          16,
-          16,
-        ]}
-      >
-        {/* ================================= */}
-        {/* MIS CLASES */}
-        {/* ================================= */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <Card
-            hoverable
+          <Button
+            size="large"
+            icon={
+              <QrcodeOutlined />
+            }
+            className="dashboard-accion-boton"
+            onClick={() =>
+              navigate(
+                '/docente/asistencia',
+              )
+            }
           >
-            <BookOutlined
-              className="dashboard-icono"
-            />
+            Iniciar asistencia
+          </Button>
+        </Card>
 
+        {/* ================================= */}
+        {/* HERRAMIENTAS */}
+        {/* ================================= */}
+
+        <section
+          className="dashboard-seccion"
+        >
+          <div
+            className="dashboard-seccion-encabezado"
+          >
             <Title
               level={4}
+              className="dashboard-seccion-titulo"
             >
-              Mis clases
+              Herramientas
             </Title>
 
             <Text
-              type="secondary"
+              className="dashboard-seccion-texto"
             >
-              Consulte las clases
-              y cursos que tiene
-              asignados.
+              Acceda a la información
+              que necesita para
+              trabajar con sus clases.
             </Text>
+          </div>
 
-            <div
-              style={{
-                marginTop:
-                  20,
-              }}
+          <Row
+            gutter={[
+              16,
+              16,
+            ]}
+          >
+            {/* MIS CLASES */}
+
+            <Col
+              xs={24}
+              md={8}
             >
-              <Button
-                type="primary"
-                block
-                onClick={() =>
-                  navigate(
-                    '/docente/clases',
-                  )
-                }
+              <Card
+                className="dashboard-card"
               >
-                Ver mis clases
-              </Button>
-            </div>
-          </Card>
-        </Col>
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <BookOutlined />
+                </div>
 
-        {/* ================================= */}
-        {/* ESTUDIANTES */}
-        {/* ================================= */}
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Mis clases
+                </Title>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <Card
-            hoverable
-          >
-            <UserAddOutlined
-              className="dashboard-icono"
-            />
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Consulte las clases
+                  y cursos que tiene
+                  asignados.
+                </Text>
 
-            <Title
-              level={4}
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/docente/clases',
+                      )
+                    }
+                  >
+                    Ver mis clases
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* ESTUDIANTES */}
+
+            <Col
+              xs={24}
+              md={8}
             >
-              Estudiantes
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Registre estudiantes
-              en las clases que
-              tiene asignadas.
-            </Text>
-
-            <div
-              style={{
-                marginTop:
-                  20,
-              }}
-            >
-              <Button
-                type="primary"
-                block
-                onClick={() =>
-                  navigate(
-                    '/docente/estudiantes',
-                  )
-                }
+              <Card
+                className="dashboard-card"
               >
-                Registrar estudiante
-              </Button>
-            </div>
-          </Card>
-        </Col>
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <UserAddOutlined />
+                </div>
 
-        {/* ================================= */}
-        {/* TOMAR ASISTENCIA */}
-        {/* ================================= */}
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Estudiantes
+                </Title>
 
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <Card
-            hoverable
-          >
-            <QrcodeOutlined
-              className="dashboard-icono"
-            />
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Registre estudiantes
+                  dentro de las clases
+                  que tiene asignadas.
+                </Text>
 
-            <Title
-              level={4}
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/docente/estudiantes',
+                      )
+                    }
+                  >
+                    Ver estudiantes
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+
+            {/* HISTORIAL */}
+
+            <Col
+              xs={24}
+              md={8}
             >
-              Tomar asistencia
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Seleccione clase y
-              curso para registrar
-              asistencia mediante QR.
-            </Text>
-
-            <div
-              style={{
-                marginTop:
-                  20,
-              }}
-            >
-              <Button
-                type="primary"
-                block
-                icon={
-                  <QrcodeOutlined />
-                }
-                onClick={() =>
-                  navigate(
-                    '/docente/asistencia',
-                  )
-                }
+              <Card
+                className="dashboard-card"
               >
-                Tomar asistencia
-              </Button>
-            </div>
-          </Card>
-        </Col>
-
-        {/* ================================= */}
-        {/* HISTORIAL */}
-        {/* ================================= */}
-
-        <Col
-          xs={24}
-          sm={12}
-          lg={6}
-        >
-          <Card
-            hoverable
-          >
-            <HistoryOutlined
-              className="dashboard-icono"
-            />
-
-            <Title
-              level={4}
-            >
-              Historial / Reportes
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Consulte asistencias
-              anteriores, fechas,
-              horarios y resultados.
-            </Text>
-
-            <div
-              style={{
-                marginTop:
-                  20,
-              }}
-            >
-              <Button
-                type="primary"
-                block
-                icon={
+                <div
+                  className="dashboard-card-icono"
+                >
                   <HistoryOutlined />
-                }
-                onClick={() =>
-                  navigate(
-                    '/docente/historial-asistencias',
-                  )
-                }
-              >
-                Ver historial
-              </Button>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Historial de asistencia
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Consulte sesiones
+                  anteriores, presentes,
+                  ausentes, fechas y
+                  horarios.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    block
+                    onClick={() =>
+                      navigate(
+                        '/docente/historial-asistencias',
+                      )
+                    }
+                  >
+                    Consultar historial
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </section>
+      </div>
     </div>
   );
 }
