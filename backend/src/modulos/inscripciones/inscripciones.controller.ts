@@ -54,24 +54,16 @@ export class InscripcionesController {
   ) {}
 
   // =====================================
-  // DOCENTE - INSCRIBIR EN MI SECCION
+  // VALIDAR DOCENTE
   // =====================================
 
-  @Post('mi-seccion')
-  @Roles('DOCENTE')
-  async crearEnMiSeccion(
-    @Req()
-    request: {
-      usuario: UsuarioAutenticado;
-    },
-
-    @Body()
-    datos:
-      CrearInscripcionDto,
+  private obtenerDocenteId(
+    usuario:
+      UsuarioAutenticado,
   ) {
     const docenteId =
       Number(
-        request.usuario.docente_id,
+        usuario.docente_id,
       );
 
     if (
@@ -85,6 +77,21 @@ export class InscripcionesController {
       );
     }
 
+    return docenteId;
+  }
+
+  // =====================================
+  // VALIDAR QUE LA CLASE
+  // PERTENEZCA AL DOCENTE
+  // =====================================
+
+  private async validarSeccionDocente(
+    docenteId:
+      number,
+
+    seccionId:
+      number,
+  ) {
     const asignaciones =
       await this.asignacionesService.obtenerPorDocente(
         docenteId,
@@ -93,7 +100,8 @@ export class InscripcionesController {
     const tieneLaSeccion =
       asignaciones.some(
         (
-          asignacion: any,
+          asignacion:
+            any,
         ) =>
           Boolean(
             asignacion.activo,
@@ -102,15 +110,48 @@ export class InscripcionesController {
             asignacion.seccion_id,
           ) ===
             Number(
-              datos.seccion_id,
+              seccionId,
             ),
       );
 
-    if (!tieneLaSeccion) {
+    if (
+      !tieneLaSeccion
+    ) {
       throw new ForbiddenException(
-        'No tiene permiso para registrar estudiantes en esta seccion.',
+        'No tiene permiso para utilizar esta seccion.',
       );
     }
+  }
+
+  // =====================================
+  // DOCENTE
+  // INSCRIBIR EN MI CLASE
+  // =====================================
+
+  @Post('mi-seccion')
+  @Roles('DOCENTE')
+  async crearEnMiSeccion(
+    @Req()
+    request: {
+      usuario:
+        UsuarioAutenticado;
+    },
+
+    @Body()
+    datos:
+      CrearInscripcionDto,
+  ) {
+    const docenteId =
+      this.obtenerDocenteId(
+        request.usuario,
+      );
+
+    await this.validarSeccionDocente(
+      docenteId,
+      Number(
+        datos.seccion_id,
+      ),
+    );
 
     const inscripcion =
       await this.inscripcionesService.crear(
@@ -127,7 +168,72 @@ export class InscripcionesController {
   }
 
   // =====================================
-  // ADMIN - TODAS
+  // DOCENTE
+  // ESTUDIANTES DE MI CLASE
+  // =====================================
+
+  @Get(
+    'mi-seccion/:seccionId',
+  )
+  @Roles('DOCENTE')
+  async obtenerMiSeccion(
+    @Req()
+    request: {
+      usuario:
+        UsuarioAutenticado;
+    },
+
+    @Param(
+      'seccionId',
+      ParseIntPipe,
+    )
+    seccionId:
+      number,
+  ) {
+    const docenteId =
+      this.obtenerDocenteId(
+        request.usuario,
+      );
+
+    await this.validarSeccionDocente(
+      docenteId,
+      seccionId,
+    );
+
+    const estudiantes =
+      await this.inscripcionesService.obtenerPorSeccion(
+        seccionId,
+      );
+
+    const activos =
+      estudiantes.filter(
+        (
+          estudiante:
+            any,
+        ) =>
+          Boolean(
+            estudiante.activo,
+          ) &&
+          Boolean(
+            estudiante.estudiante_activo,
+          ),
+      );
+
+    return {
+      mensaje:
+        'Estudiantes de su clase obtenidos correctamente',
+
+      total:
+        activos.length,
+
+      datos:
+        activos,
+    };
+  }
+
+  // =====================================
+  // ADMIN
+  // TODAS LAS INSCRIPCIONES
   // =====================================
 
   @Get()
@@ -149,7 +255,8 @@ export class InscripcionesController {
   }
 
   // =====================================
-  // ADMIN - CREAR
+  // ADMIN
+  // CREAR INSCRIPCION
   // =====================================
 
   @Post()
@@ -174,17 +281,21 @@ export class InscripcionesController {
   }
 
   // =====================================
-  // ADMIN - POR SECCION
+  // ADMIN
+  // ESTUDIANTES DE UNA CLASE
   // =====================================
 
-  @Get('seccion/:seccionId')
+  @Get(
+    'seccion/:seccionId',
+  )
   @Roles('ADMIN')
   async obtenerPorSeccion(
     @Param(
       'seccionId',
       ParseIntPipe,
     )
-    seccionId: number,
+    seccionId:
+      number,
   ) {
     const estudiantes =
       await this.inscripcionesService.obtenerPorSeccion(
@@ -204,17 +315,21 @@ export class InscripcionesController {
   }
 
   // =====================================
-  // ADMIN - POR ESTUDIANTE
+  // ADMIN
+  // INSCRIPCIONES ESTUDIANTE
   // =====================================
 
-  @Get('estudiante/:estudianteId')
+  @Get(
+    'estudiante/:estudianteId',
+  )
   @Roles('ADMIN')
   async obtenerPorEstudiante(
     @Param(
       'estudianteId',
       ParseIntPipe,
     )
-    estudianteId: number,
+    estudianteId:
+      number,
   ) {
     const inscripciones =
       await this.inscripcionesService.obtenerPorEstudiante(
@@ -233,6 +348,11 @@ export class InscripcionesController {
     };
   }
 
+  // =====================================
+  // ADMIN
+  // POR ID
+  // =====================================
+
   @Get(':id')
   @Roles('ADMIN')
   async obtenerPorId(
@@ -240,7 +360,8 @@ export class InscripcionesController {
       'id',
       ParseIntPipe,
     )
-    id: number,
+    id:
+      number,
   ) {
     const inscripcion =
       await this.inscripcionesService.obtenerPorId(
@@ -256,14 +377,22 @@ export class InscripcionesController {
     };
   }
 
-  @Patch(':id/desactivar')
+  // =====================================
+  // ADMIN
+  // DESACTIVAR
+  // =====================================
+
+  @Patch(
+    ':id/desactivar',
+  )
   @Roles('ADMIN')
   async desactivar(
     @Param(
       'id',
       ParseIntPipe,
     )
-    id: number,
+    id:
+      number,
   ) {
     const inscripcion =
       await this.inscripcionesService.cambiarEstado(
@@ -280,14 +409,22 @@ export class InscripcionesController {
     };
   }
 
-  @Patch(':id/activar')
+  // =====================================
+  // ADMIN
+  // ACTIVAR
+  // =====================================
+
+  @Patch(
+    ':id/activar',
+  )
   @Roles('ADMIN')
   async activar(
     @Param(
       'id',
       ParseIntPipe,
     )
-    id: number,
+    id:
+      number,
   ) {
     const inscripcion =
       await this.inscripcionesService.cambiarEstado(

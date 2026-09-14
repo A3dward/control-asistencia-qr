@@ -16,6 +16,8 @@ import MisClases from './paginas/MisClases';
 
 import EstudiantesDocente from './paginas/EstudiantesDocente';
 
+import TomarAsistencia from './paginas/TomarAsistencia';
+
 import Estudiantes from './paginas/Estudiantes';
 
 import Docentes from './paginas/Docentes';
@@ -136,6 +138,13 @@ function App() {
           path="/docente/estudiantes"
           element={
             <EstudiantesDocente />
+          }
+        />
+
+        <Route
+          path="/docente/asistencia"
+          element={
+            <TomarAsistencia />
           }
         />
       </Route>

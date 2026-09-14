@@ -49,8 +49,16 @@ export default function DocenteDashboard() {
   };
 
   return (
-    <div className="dashboard-pagina">
-      <div className="dashboard-encabezado">
+    <div
+      className="dashboard-pagina"
+    >
+      {/* ================================= */}
+      {/* ENCABEZADO */}
+      {/* ================================= */}
+
+      <div
+        className="dashboard-encabezado"
+      >
         <div>
           <Title
             level={2}
@@ -91,12 +99,20 @@ export default function DocenteDashboard() {
           16,
         ]}
       >
+        {/* ================================= */}
+        {/* MIS CLASES */}
+        {/* ================================= */}
+
         <Col
           xs={24}
           md={8}
         >
-          <Card>
-            <BookOutlined className="dashboard-icono" />
+          <Card
+            hoverable
+          >
+            <BookOutlined
+              className="dashboard-icono"
+            />
 
             <Title
               level={4}
@@ -107,8 +123,9 @@ export default function DocenteDashboard() {
             <Text
               type="secondary"
             >
-              Verificar Clases
-              asignadas
+              Consulte las clases
+              y cursos que tiene
+              asignados.
             </Text>
 
             <div
@@ -126,18 +143,26 @@ export default function DocenteDashboard() {
                   )
                 }
               >
-                Gestionar clases
+                Ver mis clases
               </Button>
             </div>
           </Card>
         </Col>
 
+        {/* ================================= */}
+        {/* ESTUDIANTES */}
+        {/* ================================= */}
+
         <Col
           xs={24}
           md={8}
         >
-          <Card>
-            <UserAddOutlined className="dashboard-icono" />
+          <Card
+            hoverable
+          >
+            <UserAddOutlined
+              className="dashboard-icono"
+            />
 
             <Title
               level={4}
@@ -149,7 +174,7 @@ export default function DocenteDashboard() {
               type="secondary"
             >
               Registre estudiantes
-              en las secciones que
+              en las clases que
               tiene asignadas.
             </Text>
 
@@ -174,12 +199,20 @@ export default function DocenteDashboard() {
           </Card>
         </Col>
 
+        {/* ================================= */}
+        {/* TOMAR ASISTENCIA */}
+        {/* ================================= */}
+
         <Col
           xs={24}
           md={8}
         >
-          <Card>
-            <QrcodeOutlined className="dashboard-icono" />
+          <Card
+            hoverable
+          >
+            <QrcodeOutlined
+              className="dashboard-icono"
+            />
 
             <Title
               level={4}
@@ -190,9 +223,9 @@ export default function DocenteDashboard() {
             <Text
               type="secondary"
             >
-              Escanee los QR de
-              los estudiantes con
-              la camara.
+              Seleccione clase y
+              curso para registrar
+              asistencia mediante QR.
             </Text>
 
             <div
@@ -202,10 +235,18 @@ export default function DocenteDashboard() {
               }}
             >
               <Button
+                type="primary"
                 block
-                disabled
+                icon={
+                  <QrcodeOutlined />
+                }
+                onClick={() =>
+                  navigate(
+                    '/docente/asistencia',
+                  )
+                }
               >
-                ---
+                Tomar asistencia
               </Button>
             </div>
           </Card>
