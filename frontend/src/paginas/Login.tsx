@@ -214,16 +214,13 @@ export default function Login() {
             <h1
               className="login-presentacion-titulo"
             >
-              Registro de asistencia
-              de forma sencilla.
+              
             </h1>
 
             <p
               className="login-presentacion-texto"
             >
-              Sistema web para el
-              control de estudiantes
-              y registro de asistencia
+             registro de asistencia
               mediante código QR.
             </p>
           </div>
