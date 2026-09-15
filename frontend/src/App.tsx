@@ -10,6 +10,8 @@ import Login from './paginas/Login';
 
 import AdminDashboard from './paginas/AdminDashboard';
 
+import ReporteAsistenciasAdmin from './paginas/ReporteAsistenciasAdmin';
+
 import DocenteDashboard from './paginas/DocenteDashboard';
 
 import MisClases from './paginas/MisClases';
@@ -105,6 +107,13 @@ function App() {
           path="/admin/asignaciones"
           element={
             <Asignaciones />
+          }
+        />
+
+        <Route
+          path="/admin/reportes-asistencia"
+          element={
+            <ReporteAsistenciasAdmin />
           }
         />
       </Route>

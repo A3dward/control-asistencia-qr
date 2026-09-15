@@ -1,6 +1,7 @@
 import {
   ApartmentOutlined,
   BookOutlined,
+  FileTextOutlined,
   LogoutOutlined,
   QrcodeOutlined,
   ReadOutlined,
@@ -175,8 +176,6 @@ export default function AdminDashboard() {
               16,
             ]}
           >
-            {/* ESTUDIANTES */}
-
             <Col
               xs={24}
               md={12}
@@ -221,8 +220,6 @@ export default function AdminDashboard() {
                 </div>
               </Card>
             </Col>
-
-            {/* DOCENTES */}
 
             <Col
               xs={24}
@@ -273,7 +270,7 @@ export default function AdminDashboard() {
         </section>
 
         {/* ================================= */}
-        {/* CONFIGURACION */}
+        {/* CONFIGURACION ACADEMICA */}
         {/* ================================= */}
 
         <section
@@ -305,8 +302,6 @@ export default function AdminDashboard() {
               16,
             ]}
           >
-            {/* CLASES */}
-
             <Col
               xs={24}
               sm={12}
@@ -352,8 +347,6 @@ export default function AdminDashboard() {
               </Card>
             </Col>
 
-            {/* CURSOS */}
-
             <Col
               xs={24}
               sm={12}
@@ -398,8 +391,6 @@ export default function AdminDashboard() {
                 </div>
               </Card>
             </Col>
-
-            {/* CURSOS POR CLASE */}
 
             <Col
               xs={24}
@@ -447,8 +438,6 @@ export default function AdminDashboard() {
               </Card>
             </Col>
 
-            {/* ASIGNACIONES */}
-
             <Col
               xs={24}
               sm={12}
@@ -489,6 +478,81 @@ export default function AdminDashboard() {
                     }
                   >
                     Ver asignaciones
+                  </Button>
+                </div>
+              </Card>
+            </Col>
+          </Row>
+        </section>
+
+        {/* ================================= */}
+        {/* REPORTES */}
+        {/* ================================= */}
+
+        <section
+          className="dashboard-seccion"
+        >
+          <div
+            className="dashboard-seccion-encabezado"
+          >
+            <Title
+              level={4}
+              className="dashboard-seccion-titulo"
+            >
+              Reportes
+            </Title>
+
+            <Text
+              className="dashboard-seccion-texto"
+            >
+              Consulte el trabajo de
+              asistencia realizado por
+              los docentes.
+            </Text>
+          </div>
+
+          <Row>
+            <Col
+              xs={24}
+            >
+              <Card
+                className="dashboard-card"
+              >
+                <div
+                  className="dashboard-card-icono"
+                >
+                  <FileTextOutlined />
+                </div>
+
+                <Title
+                  level={4}
+                  className="dashboard-card-titulo"
+                >
+                  Reporte de asistencias por docente
+                </Title>
+
+                <Text
+                  className="dashboard-card-texto"
+                >
+                  Seleccione un docente
+                  y un período para
+                  consultar los cursos
+                  impartidos, estudiantes
+                  presentes y ausentes.
+                </Text>
+
+                <div
+                  className="dashboard-card-accion"
+                >
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      navigate(
+                        '/admin/reportes-asistencia',
+                      )
+                    }
+                  >
+                    Consultar reporte
                   </Button>
                 </div>
               </Card>
