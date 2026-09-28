@@ -1,10 +1,8 @@
 import {
   ArrowLeftOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
+  CalendarOutlined,
   EyeOutlined,
-  HistoryOutlined,
-  ReloadOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -12,13 +10,13 @@ import {
   Button,
   Card,
   Col,
+  Input,
   message,
   Modal,
   Row,
   Select,
   Space,
   Spin,
-  Statistic,
   Table,
   Tag,
   Typography,
@@ -179,7 +177,7 @@ export default function HistorialAsistencias() {
     useNavigate();
 
   // =====================================
-  // DATOS
+  // DATOS BASE
   // =====================================
 
   const [
@@ -190,9 +188,13 @@ export default function HistorialAsistencias() {
       Asignacion[]
     >([]);
 
+  // =====================================
+  // RESULTADOS
+  // =====================================
+
   const [
-    sesiones,
-    setSesiones,
+    resultados,
+    setResultados,
   ] =
     useState<
       SesionHistorial[]
@@ -219,38 +221,48 @@ export default function HistorialAsistencias() {
   // =====================================
 
   const [
-    filtroSeccionId,
-    setFiltroSeccionId,
+    seccionId,
+    setSeccionId,
   ] =
     useState<
       number | undefined
     >(undefined);
 
   const [
-    filtroAsignacionId,
-    setFiltroAsignacionId,
+    asignacionId,
+    setAsignacionId,
   ] =
     useState<
       number | undefined
     >(undefined);
 
   const [
-    filtroEstado,
-    setFiltroEstado,
+    fecha,
+    setFecha,
   ] =
-    useState<
-      string | undefined
-    >(undefined);
+    useState('');
 
   // =====================================
   // ESTADOS
   // =====================================
 
   const [
-    cargando,
-    setCargando,
+    cargandoAsignaciones,
+    setCargandoAsignaciones,
   ] =
     useState(true);
+
+  const [
+    buscando,
+    setBuscando,
+  ] =
+    useState(false);
+
+  const [
+    consultaRealizada,
+    setConsultaRealizada,
+  ] =
+    useState(false);
 
   const [
     cargandoDetalle,
@@ -301,11 +313,21 @@ export default function HistorialAsistencias() {
       );
     }
 
+    if (
+      error instanceof
+      Error
+    ) {
+      return (
+        error.message ||
+        predeterminado
+      );
+    }
+
     return predeterminado;
   };
 
   // =====================================
-  // NOMBRE CLASE
+  // NOMBRE DE CLASE
   // =====================================
 
   const obtenerNombreClase = (
@@ -327,34 +349,45 @@ export default function HistorialAsistencias() {
         'general';
 
     return mostrarSeccion
-      ? `${datos.grado} - Seccion ${datos.seccion} - ${datos.anio_academico}`
+      ? `${datos.grado} - Sección ${datos.seccion} - ${datos.anio_academico}`
       : `${datos.grado} - ${datos.anio_academico}`;
   };
 
   // =====================================
-  // FECHA
+  // OBTENER FECHA YYYY-MM-DD
+  // =====================================
+
+  const obtenerFechaSimple = (
+    valor:
+      string,
+  ) => {
+    if (!valor) {
+      return '';
+    }
+
+    return String(
+      valor,
+    ).substring(
+      0,
+      10,
+    );
+  };
+
+  // =====================================
+  // FORMATO FECHA
   // =====================================
 
   const formatearFecha = (
     valor:
       string,
   ) => {
-    if (
-      !valor
-    ) {
-      return '-';
-    }
-
-    const fecha =
-      String(
+    const fechaSimple =
+      obtenerFechaSimple(
         valor,
-      ).substring(
-        0,
-        10,
       );
 
     const partes =
-      fecha.split(
+      fechaSimple.split(
         '-',
       );
 
@@ -362,29 +395,23 @@ export default function HistorialAsistencias() {
       partes.length !==
       3
     ) {
-      return fecha;
+      return fechaSimple;
     }
 
     return `${partes[2]}/${partes[1]}/${partes[0]}`;
   };
 
   // =====================================
-  // HORA
+  // FORMATO HORA
   // =====================================
 
   const formatearHora = (
     valor:
       string | null,
   ) => {
-    if (
-      !valor
-    ) {
+    if (!valor) {
       return '-';
     }
-
-    // =================================
-    // SI VIENE COMO HH:MM:SS
-    // =================================
 
     if (
       /^\d{2}:\d{2}/.test(
@@ -393,33 +420,30 @@ export default function HistorialAsistencias() {
     ) {
       return valor.substring(
         0,
-        8,
+        5,
       );
     }
 
-    const fecha =
+    const fechaHora =
       new Date(
         valor,
       );
 
     if (
       Number.isNaN(
-        fecha.getTime(),
+        fechaHora.getTime(),
       )
     ) {
       return valor;
     }
 
-    return fecha.toLocaleTimeString(
+    return fechaHora.toLocaleTimeString(
       'es-GT',
       {
         hour:
           '2-digit',
 
         minute:
-          '2-digit',
-
-        second:
           '2-digit',
 
         hour12:
@@ -432,7 +456,7 @@ export default function HistorialAsistencias() {
   };
 
   // =====================================
-  // CLASES UNICAS
+  // CLASES DEL DOCENTE
   // =====================================
 
   const clases =
@@ -444,18 +468,27 @@ export default function HistorialAsistencias() {
             Asignacion
           >();
 
-        asignaciones.forEach(
-          (
-            asignacion,
-          ) => {
-            mapa.set(
-              Number(
-                asignacion.seccion_id,
-              ),
+        asignaciones
+          .filter(
+            (
               asignacion,
-            );
-          },
-        );
+            ) =>
+              Boolean(
+                asignacion.activo,
+              ),
+          )
+          .forEach(
+            (
+              asignacion,
+            ) => {
+              mapa.set(
+                Number(
+                  asignacion.seccion_id,
+                ),
+                asignacion,
+              );
+            },
+          );
 
         return Array.from(
           mapa.values(),
@@ -467,150 +500,84 @@ export default function HistorialAsistencias() {
     );
 
   // =====================================
-  // CURSOS PARA FILTRO
+  // CURSOS DE LA CLASE
   // =====================================
 
-  const cursosFiltro =
+  const cursos =
     useMemo(
       () =>
         asignaciones.filter(
           (
             asignacion,
           ) =>
-            !filtroSeccionId ||
+            Boolean(
+              asignacion.activo,
+            ) &&
             Number(
               asignacion.seccion_id,
             ) ===
               Number(
-                filtroSeccionId,
+                seccionId,
               ),
         ),
       [
         asignaciones,
-        filtroSeccionId,
+        seccionId,
       ],
     );
 
   // =====================================
-  // SESIONES FILTRADAS
+  // ASIGNACION SELECCIONADA
   // =====================================
 
-  const sesionesFiltradas =
+  const asignacionSeleccionada =
     useMemo(
       () =>
-        sesiones.filter(
+        asignaciones.find(
           (
-            sesion,
-          ) => {
-            const cumpleClase =
-              !filtroSeccionId ||
+            asignacion,
+          ) =>
+            Number(
+              asignacion.asignacion_id,
+            ) ===
               Number(
-                sesion.seccion_id,
-              ) ===
-                Number(
-                  filtroSeccionId,
-                );
-
-            const cumpleCurso =
-              !filtroAsignacionId ||
-              Number(
-                sesion.asignacion_id,
-              ) ===
-                Number(
-                  filtroAsignacionId,
-                );
-
-            const cumpleEstado =
-              !filtroEstado ||
-              sesion.estado ===
-                filtroEstado;
-
-            return (
-              cumpleClase &&
-              cumpleCurso &&
-              cumpleEstado
-            );
-          },
-        ),
+                asignacionId,
+              ),
+        ) ??
+        null,
       [
-        sesiones,
-        filtroSeccionId,
-        filtroAsignacionId,
-        filtroEstado,
+        asignaciones,
+        asignacionId,
       ],
     );
 
   // =====================================
-  // TOTALES GENERALES
+  // CARGAR CLASES Y CURSOS
+  //
+  // ESTA ES LA UNICA CONSULTA
+  // AUTOMATICA AL ENTRAR.
+  // NO CARGA HISTORIAL.
   // =====================================
 
-  const totalPresentes =
-    sesionesFiltradas.reduce(
-      (
-        acumulado,
-        sesion,
-      ) =>
-        acumulado +
-        Number(
-          sesion.resumen.presentes,
-        ),
-      0,
-    );
-
-  const totalAusentes =
-    sesionesFiltradas.reduce(
-      (
-        acumulado,
-        sesion,
-      ) =>
-        acumulado +
-        Number(
-          sesion.resumen.ausentes,
-        ),
-      0,
-    );
-
-  const totalRegistros =
-    sesionesFiltradas.reduce(
-      (
-        acumulado,
-        sesion,
-      ) =>
-        acumulado +
-        Number(
-          sesion.resumen.total_registros,
-        ),
-      0,
-    );
-
-  // =====================================
-  // CARGAR HISTORIAL
-  // =====================================
-
-  const cargarHistorial =
+  const cargarAsignaciones =
     async () => {
       try {
-        setCargando(
+        setCargandoAsignaciones(
           true,
         );
 
-        // =================================
-        // ASIGNACIONES DEL DOCENTE
-        // =================================
-
-        const respuestaAsignaciones =
+        const respuesta =
           await api.get(
             '/asignaciones/mis-asignaciones',
           );
 
-        const datosAsignaciones =
-          respuestaAsignaciones
-            .data
+        const datos =
+          respuesta.data
             .datos ?? [];
 
         const normalizadas:
           Asignacion[] =
-          datosAsignaciones.map(
+          datos.map(
             (
               asignacion:
                 any,
@@ -647,214 +614,17 @@ export default function HistorialAsistencias() {
         setAsignaciones(
           normalizadas,
         );
-
-        // =================================
-        // SESIONES DE CADA CURSO
-        // =================================
-
-        const resultados =
-          await Promise.all(
-            normalizadas.map(
-              async (
-                asignacion,
-              ) => {
-                const respuesta =
-                  await api.get(
-                    `/sesiones-clase/asignacion/${asignacion.asignacion_id}`,
-                  );
-
-                const datos =
-                  respuesta.data
-                    .datos ?? [];
-
-                return datos.map(
-                  (
-                    sesion:
-                      any,
-                  ) => ({
-                    ...sesion,
-
-                    id:
-                      Number(
-                        sesion.id,
-                      ),
-
-                    asignacion_docente_id:
-                      Number(
-                        sesion.asignacion_docente_id,
-                      ),
-
-                    asignacion_id:
-                      asignacion.asignacion_id,
-
-                    curso_id:
-                      asignacion.curso_id,
-
-                    codigo_curso:
-                      asignacion.codigo_curso,
-
-                    curso:
-                      asignacion.curso,
-
-                    seccion_id:
-                      asignacion.seccion_id,
-
-                    seccion:
-                      asignacion.seccion,
-
-                    grado:
-                      asignacion.grado,
-
-                    anio_academico:
-                      asignacion.anio_academico,
-
-                    resumen: {
-                      total_registros:
-                        0,
-
-                      presentes:
-                        0,
-
-                      ausentes:
-                        0,
-
-                      tarde:
-                        0,
-
-                      justificados:
-                        0,
-                    },
-                  }),
-                );
-              },
-            ),
-          );
-
-        const todasSesiones:
-          SesionHistorial[] =
-          resultados.flat();
-
-        // =================================
-        // RESUMEN DE CADA SESION
-        // =================================
-
-        const sesionesConResumen =
-          await Promise.all(
-            todasSesiones.map(
-              async (
-                sesion,
-              ) => {
-                try {
-                  const respuesta =
-                    await api.get(
-                      `/asistencias/sesion/${sesion.id}/resumen`,
-                    );
-
-                  const resumen =
-                    respuesta.data
-                      .datos
-                      ?.resumen;
-
-                  return {
-                    ...sesion,
-
-                    resumen: {
-                      total_registros:
-                        Number(
-                          resumen?.total_registros ??
-                            0,
-                        ),
-
-                      presentes:
-                        Number(
-                          resumen?.presentes ??
-                            0,
-                        ),
-
-                      ausentes:
-                        Number(
-                          resumen?.ausentes ??
-                            0,
-                        ),
-
-                      tarde:
-                        Number(
-                          resumen?.tarde ??
-                            0,
-                        ),
-
-                      justificados:
-                        Number(
-                          resumen?.justificados ??
-                            0,
-                        ),
-                    },
-                  };
-                } catch {
-                  return sesion;
-                }
-              },
-            ),
-          );
-
-        // =================================
-        // MAS RECIENTES PRIMERO
-        // =================================
-
-        sesionesConResumen.sort(
-          (
-            a,
-            b,
-          ) => {
-            const fechaA =
-              new Date(
-                a.hora_inicio,
-              ).getTime();
-
-            const fechaB =
-              new Date(
-                b.hora_inicio,
-              ).getTime();
-
-            if (
-              !Number.isNaN(
-                fechaA,
-              ) &&
-              !Number.isNaN(
-                fechaB,
-              )
-            ) {
-              return (
-                fechaB -
-                fechaA
-              );
-            }
-
-            return (
-              Number(
-                b.id,
-              ) -
-              Number(
-                a.id,
-              )
-            );
-          },
-        );
-
-        setSesiones(
-          sesionesConResumen,
-        );
       } catch (
         error
       ) {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible cargar el historial de asistencias.',
+            'No fue posible cargar sus clases y cursos.',
           ),
         );
       } finally {
-        setCargando(
+        setCargandoAsignaciones(
           false,
         );
       }
@@ -866,10 +636,330 @@ export default function HistorialAsistencias() {
 
   useEffect(
     () => {
-      void cargarHistorial();
+      void cargarAsignaciones();
     },
     [],
   );
+
+  // =====================================
+  // LIMPIAR RESULTADO
+  // =====================================
+
+  const limpiarResultado =
+    () => {
+      setResultados(
+        [],
+      );
+
+      setConsultaRealizada(
+        false,
+      );
+    };
+
+  // =====================================
+  // BUSCAR HISTORIAL
+  // =====================================
+
+  const buscarHistorial =
+    async () => {
+      if (
+        !seccionId
+      ) {
+        message.warning(
+          'Seleccione una clase.',
+        );
+
+        return;
+      }
+
+      if (
+        !asignacionId
+      ) {
+        message.warning(
+          'Seleccione un curso.',
+        );
+
+        return;
+      }
+
+      if (
+        !fecha
+      ) {
+        message.warning(
+          'Seleccione una fecha.',
+        );
+
+        return;
+      }
+
+      try {
+        setBuscando(
+          true,
+        );
+
+        setResultados(
+          [],
+        );
+
+        setConsultaRealizada(
+          false,
+        );
+
+        // =================================
+        // SESIONES DEL CURSO
+        // =================================
+
+        const respuesta =
+          await api.get(
+            `/sesiones-clase/asignacion/${asignacionId}`,
+          );
+
+        const datos =
+          respuesta.data
+            .datos ?? [];
+
+        // =================================
+        // FILTRAR SOLAMENTE POR FECHA
+        //
+        // NO SE FILTRA POR ESTADO.
+        // ABIERTA, CERRADA O CANCELADA
+        // PUEDEN APARECER.
+        // =================================
+
+        const sesionesFecha =
+          datos.filter(
+            (
+              sesion:
+                any,
+            ) =>
+              obtenerFechaSimple(
+                sesion.fecha_sesion,
+              ) ===
+                fecha,
+          );
+
+        const base:
+          SesionHistorial[] =
+          sesionesFecha.map(
+            (
+              sesion:
+                any,
+            ) => ({
+              ...sesion,
+
+              id:
+                Number(
+                  sesion.id,
+                ),
+
+              asignacion_docente_id:
+                Number(
+                  sesion.asignacion_docente_id,
+                ),
+
+              asignacion_id:
+                Number(
+                  asignacionSeleccionada
+                    ?.asignacion_id ??
+                    asignacionId,
+                ),
+
+              curso_id:
+                Number(
+                  asignacionSeleccionada
+                    ?.curso_id ??
+                    0,
+                ),
+
+              codigo_curso:
+                asignacionSeleccionada
+                  ?.codigo_curso ??
+                '',
+
+              curso:
+                asignacionSeleccionada
+                  ?.curso ??
+                '',
+
+              seccion_id:
+                Number(
+                  asignacionSeleccionada
+                    ?.seccion_id ??
+                    seccionId,
+                ),
+
+              seccion:
+                asignacionSeleccionada
+                  ?.seccion ??
+                '',
+
+              grado:
+                asignacionSeleccionada
+                  ?.grado ??
+                '',
+
+              anio_academico:
+                Number(
+                  asignacionSeleccionada
+                    ?.anio_academico ??
+                    0,
+                ),
+
+              resumen: {
+                total_registros:
+                  0,
+
+                presentes:
+                  0,
+
+                ausentes:
+                  0,
+
+                tarde:
+                  0,
+
+                justificados:
+                  0,
+              },
+            }),
+          );
+
+        // =================================
+        // SOLO CONSULTAMOS RESUMEN
+        // DE LAS SESIONES ENCONTRADAS
+        // =================================
+
+        const completas =
+          await Promise.all(
+            base.map(
+              async (
+                sesion,
+              ) => {
+                try {
+                  const respuestaResumen =
+                    await api.get(
+                      `/asistencias/sesion/${sesion.id}/resumen`,
+                    );
+
+                  const resumen =
+                    respuestaResumen
+                      .data
+                      .datos
+                      ?.resumen;
+
+                  return {
+                    ...sesion,
+
+                    resumen: {
+                      total_registros:
+                        Number(
+                          resumen
+                            ?.total_registros ??
+                            0,
+                        ),
+
+                      presentes:
+                        Number(
+                          resumen
+                            ?.presentes ??
+                            0,
+                        ),
+
+                      ausentes:
+                        Number(
+                          resumen
+                            ?.ausentes ??
+                            0,
+                        ),
+
+                      tarde:
+                        Number(
+                          resumen
+                            ?.tarde ??
+                            0,
+                        ),
+
+                      justificados:
+                        Number(
+                          resumen
+                            ?.justificados ??
+                            0,
+                        ),
+                    },
+                  };
+                } catch {
+                  return sesion;
+                }
+              },
+            ),
+          );
+
+        completas.sort(
+          (
+            a,
+            b,
+          ) =>
+            Number(
+              b.id,
+            ) -
+            Number(
+              a.id,
+            ),
+        );
+
+        setResultados(
+          completas,
+        );
+
+        setConsultaRealizada(
+          true,
+        );
+      } catch (
+        error
+      ) {
+        message.error(
+          obtenerMensajeError(
+            error,
+            'No fue posible consultar el historial.',
+          ),
+        );
+      } finally {
+        setBuscando(
+          false,
+        );
+      }
+    };
+
+  // =====================================
+  // LIMPIAR FILTROS
+  // =====================================
+
+  const limpiarFiltros =
+    () => {
+      setSeccionId(
+        undefined,
+      );
+
+      setAsignacionId(
+        undefined,
+      );
+
+      setFecha(
+        '',
+      );
+
+      setResultados(
+        [],
+      );
+
+      setConsultaRealizada(
+        false,
+      );
+
+      setSesionSeleccionada(
+        null,
+      );
+    };
 
   // =====================================
   // VER DETALLE
@@ -952,117 +1042,78 @@ export default function HistorialAsistencias() {
     };
 
   // =====================================
-  // ESTADO
+  // COLOR DE ESTADO
   // =====================================
 
-  const etiquetaEstado = (
-    estado:
-      string,
-  ) => {
-    if (
-      estado ===
-      'CERRADA'
-    ) {
-      return (
-        <Tag
-          color="green"
-        >
-          CERRADA
-        </Tag>
-      );
-    }
+  const colorEstadoSesion =
+    (
+      estado:
+        string,
+    ) => {
+      if (
+        estado ===
+        'CERRADA'
+      ) {
+        return 'green';
+      }
 
-    if (
-      estado ===
-      'ABIERTA'
-    ) {
-      return (
-        <Tag
-          color="blue"
-        >
-          ABIERTA
-        </Tag>
-      );
-    }
+      if (
+        estado ===
+        'ABIERTA'
+      ) {
+        return 'blue';
+      }
 
-    if (
-      estado ===
-      'CANCELADA'
-    ) {
-      return (
-        <Tag
-          color="red"
-        >
-          CANCELADA
-        </Tag>
-      );
-    }
+      if (
+        estado ===
+        'CANCELADA'
+      ) {
+        return 'red';
+      }
 
-    return (
-      <Tag>
-        {estado}
-      </Tag>
-    );
-  };
+      return 'default';
+    };
 
   // =====================================
-  // PORCENTAJE
+  // COLOR DE ASISTENCIA
   // =====================================
 
-  const porcentajeSesion = (
-    sesion:
-      SesionHistorial,
-  ) => {
-    const total =
-      Number(
-        sesion.resumen
-          .total_registros,
-      );
+  const colorEstadoAsistencia =
+    (
+      estado:
+        string,
+    ) => {
+      if (
+        estado ===
+        'PRESENTE'
+      ) {
+        return 'green';
+      }
 
-    if (
-      total ===
-      0
-    ) {
-      return 0;
-    }
+      if (
+        estado ===
+        'AUSENTE'
+      ) {
+        return 'red';
+      }
 
-    return (
-      Number(
-        sesion.resumen
-          .presentes,
-      ) /
-      total
-    ) *
-      100;
-  };
+      if (
+        estado ===
+        'TARDE'
+      ) {
+        return 'orange';
+      }
+
+      return 'blue';
+    };
 
   // =====================================
-  // COLUMNAS HISTORIAL
+  // COLUMNAS RESULTADOS
   // =====================================
 
   const columnas:
     TableColumnsType<SesionHistorial> =
     [
-      {
-        title:
-          'Sesion',
-
-        dataIndex:
-          'id',
-
-        key:
-          'id',
-
-        width:
-          90,
-
-        render: (
-          id:
-            number,
-        ) =>
-          `#${id}`,
-      },
-
       {
         title:
           'Fecha',
@@ -1074,15 +1125,69 @@ export default function HistorialAsistencias() {
           'fecha_sesion',
 
         width:
-          120,
+          130,
 
         render: (
-          fecha:
+          valor:
             string,
         ) =>
           formatearFecha(
-            fecha,
+            valor,
           ),
+      },
+
+      {
+        title:
+          'Curso',
+
+        key:
+          'curso',
+
+        render: (
+          _,
+          sesion,
+        ) => (
+          <div>
+            <Text strong>
+              {
+                sesion.curso
+              }
+            </Text>
+
+            <br />
+
+            <Space
+              size={6}
+              wrap
+            >
+              <Text
+                type="secondary"
+                style={{
+                  fontSize:
+                    12,
+                }}
+              >
+                {
+                  obtenerNombreClase(
+                    sesion,
+                  )
+                }
+              </Text>
+
+              <Tag
+                color={
+                  colorEstadoSesion(
+                    sesion.estado,
+                  )
+                }
+              >
+                {
+                  sesion.estado
+                }
+              </Tag>
+            </Space>
+          </div>
+        ),
       },
 
       {
@@ -1108,58 +1213,6 @@ export default function HistorialAsistencias() {
 
       {
         title:
-          'Clase',
-
-        key:
-          'clase',
-
-        render: (
-          _,
-          sesion,
-        ) =>
-          obtenerNombreClase(
-            sesion,
-          ),
-      },
-
-      {
-        title:
-          'Curso',
-
-        key:
-          'curso',
-
-        render: (
-          _,
-          sesion,
-        ) =>
-          `${sesion.codigo_curso} - ${sesion.curso}`,
-      },
-
-      {
-        title:
-          'Estado',
-
-        dataIndex:
-          'estado',
-
-        key:
-          'estado',
-
-        width:
-          120,
-
-        render: (
-          estado:
-            string,
-        ) =>
-          etiquetaEstado(
-            estado,
-          ),
-      },
-
-      {
-        title:
           'Presentes',
 
         key:
@@ -1174,9 +1227,16 @@ export default function HistorialAsistencias() {
         render: (
           _,
           sesion,
-        ) =>
-          sesion.resumen
-            .presentes,
+        ) => (
+          <Tag
+            color="green"
+          >
+            {
+              sesion.resumen
+                .presentes
+            }
+          </Tag>
+        ),
       },
 
       {
@@ -1195,54 +1255,33 @@ export default function HistorialAsistencias() {
         render: (
           _,
           sesion,
-        ) =>
-          sesion.resumen
-            .ausentes,
+        ) => (
+          <Tag
+            color="red"
+          >
+            {
+              sesion.resumen
+                .ausentes
+            }
+          </Tag>
+        ),
       },
 
       {
         title:
-          'Asistencia',
+          'Detalle',
 
         key:
-          'porcentaje',
+          'detalle',
 
         width:
           120,
-
-        align:
-          'center',
-
-        render: (
-          _,
-          sesion,
-        ) =>
-          `${porcentajeSesion(
-            sesion,
-          ).toFixed(
-            1,
-          )}%`,
-      },
-
-      {
-        title:
-          'Accion',
-
-        key:
-          'accion',
-
-        width:
-          120,
-
-        fixed:
-          'right',
 
         render: (
           _,
           sesion,
         ) => (
           <Button
-            type="primary"
             icon={
               <EyeOutlined />
             }
@@ -1276,7 +1315,7 @@ export default function HistorialAsistencias() {
           'codigo_estudiante',
 
         width:
-          130,
+          140,
       },
 
       {
@@ -1304,7 +1343,7 @@ export default function HistorialAsistencias() {
           'estado',
 
         width:
-          130,
+          140,
 
         render: (
           estado:
@@ -1312,10 +1351,9 @@ export default function HistorialAsistencias() {
         ) => (
           <Tag
             color={
-              estado ===
-              'PRESENTE'
-                ? 'green'
-                : 'red'
+              colorEstadoAsistencia(
+                estado,
+              )
             }
           >
             {estado}
@@ -1331,14 +1369,13 @@ export default function HistorialAsistencias() {
           'hora',
 
         width:
-          180,
+          170,
 
         render: (
           _,
           asistencia,
         ) =>
-          asistencia.estado ===
-          'PRESENTE'
+          asistencia.fecha_hora_asistencia
             ? formatearHora(
                 asistencia.fecha_hora_asistencia,
               )
@@ -1352,31 +1389,19 @@ export default function HistorialAsistencias() {
 
   return (
     <div
-      style={{
-        maxWidth:
-          1400,
-
-        margin:
-          '0 auto',
-
-        padding:
-          24,
-      }}
+      className="pagina-administracion"
     >
-      {/* ================================= */}
-      {/* ENCABEZADO */}
-      {/* ================================= */}
+      <div>
+        {/* ================================= */}
+        {/* REGRESAR */}
+        {/* ================================= */}
 
-      <Space
-        style={{
-          marginBottom:
-            20,
-        }}
-      >
         <Button
+          type="text"
           icon={
             <ArrowLeftOutlined />
           }
+          className="boton-regresar"
           onClick={() =>
             navigate(
               '/docente',
@@ -1386,628 +1411,540 @@ export default function HistorialAsistencias() {
           Regresar
         </Button>
 
-        <Button
-          icon={
-            <ReloadOutlined />
-          }
-          onClick={() => {
-            void cargarHistorial();
+        {/* ================================= */}
+        {/* ENCABEZADO */}
+        {/* ================================= */}
+
+        <div
+          style={{
+            marginBottom:
+              22,
           }}
         >
-          Actualizar
-        </Button>
-      </Space>
-
-      <Title
-        level={2}
-        style={{
-          marginBottom:
-            4,
-        }}
-      >
-        Historial de asistencias
-      </Title>
-
-      <Text
-        type="secondary"
-      >
-        Consulte las sesiones de
-        asistencia realizadas en
-        sus clases y cursos.
-      </Text>
-
-      {/* ================================= */}
-      {/* RESUMEN GENERAL */}
-      {/* ================================= */}
-
-      <Row
-        gutter={[
-          16,
-          16,
-        ]}
-        style={{
-          marginTop:
-            24,
-
-          marginBottom:
-            24,
-        }}
-      >
-        <Col
-          xs={12}
-          md={6}
-        >
-          <Card>
-            <Statistic
-              title="Sesiones"
-              value={
-                sesionesFiltradas.length
-              }
-              prefix={
-                <HistoryOutlined />
-              }
-            />
-          </Card>
-        </Col>
-
-        <Col
-          xs={12}
-          md={6}
-        >
-          <Card>
-            <Statistic
-              title="Registros"
-              value={
-                totalRegistros
-              }
-            />
-          </Card>
-        </Col>
-
-        <Col
-          xs={12}
-          md={6}
-        >
-          <Card>
-            <Statistic
-              title="Presentes"
-              value={
-                totalPresentes
-              }
-              prefix={
-                <CheckCircleOutlined />
-              }
-            />
-          </Card>
-        </Col>
-
-        <Col
-          xs={12}
-          md={6}
-        >
-          <Card>
-            <Statistic
-              title="Ausentes"
-              value={
-                totalAusentes
-              }
-              prefix={
-                <CloseCircleOutlined />
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* ================================= */}
-      {/* FILTROS */}
-      {/* ================================= */}
-
-      <Card
-        title="Filtros"
-        style={{
-          marginBottom:
-            24,
-        }}
-      >
-        <Row
-          gutter={[
-            16,
-            16,
-          ]}
-        >
-          <Col
-            xs={24}
-            md={8}
+          <Title
+            level={2}
+            style={{
+              marginBottom:
+                4,
+            }}
           >
-            <Text strong>
-              Clase
-            </Text>
+            Historial de asistencias
+          </Title>
 
-            <Select
-              allowClear
-              style={{
-                width:
-                  '100%',
+          <Text
+            type="secondary"
+          >
+            Seleccione una clase,
+            un curso y la fecha que
+            desea consultar.
+          </Text>
+        </div>
 
-                marginTop:
-                  8,
-              }}
-              placeholder="Todas las clases"
-              value={
-                filtroSeccionId
-              }
-              options={
-                clases.map(
-                  (
-                    clase,
-                  ) => ({
-                    value:
-                      clase.seccion_id,
+        {/* ================================= */}
+        {/* FILTROS */}
+        {/* ================================= */}
 
-                    label:
-                      obtenerNombreClase(
-                        clase,
-                      ),
-                  }),
-                )
-              }
-              onChange={(
-                valor,
-              ) => {
-                setFiltroSeccionId(
+        <Card>
+          <Row
+            gutter={[
+              16,
+              16,
+            ]}
+            align="bottom"
+          >
+            {/* CLASE */}
+
+            <Col
+              xs={24}
+              md={6}
+            >
+              <Text strong>
+                Clase
+              </Text>
+
+              <Select
+                showSearch
+                optionFilterProp="label"
+                placeholder="Seleccione una clase"
+                value={
+                  seccionId
+                }
+                loading={
+                  cargandoAsignaciones
+                }
+                disabled={
+                  cargandoAsignaciones
+                }
+                style={{
+                  width:
+                    '100%',
+
+                  marginTop:
+                    7,
+                }}
+                options={
+                  clases.map(
+                    (
+                      clase,
+                    ) => ({
+                      value:
+                        clase.seccion_id,
+
+                      label:
+                        obtenerNombreClase(
+                          clase,
+                        ),
+                    }),
+                  )
+                }
+                onChange={(
                   valor,
-                );
+                ) => {
+                  setSeccionId(
+                    Number(
+                      valor,
+                    ),
+                  );
 
-                setFiltroAsignacionId(
-                  undefined,
-                );
-              }}
-            />
-          </Col>
+                  setAsignacionId(
+                    undefined,
+                  );
 
-          <Col
-            xs={24}
-            md={8}
-          >
-            <Text strong>
-              Curso
-            </Text>
+                  limpiarResultado();
+                }}
+              />
+            </Col>
 
-            <Select
-              allowClear
+            {/* CURSO */}
+
+            <Col
+              xs={24}
+              md={6}
+            >
+              <Text strong>
+                Curso
+              </Text>
+
+              <Select
+                showSearch
+                optionFilterProp="label"
+                placeholder="Seleccione un curso"
+                value={
+                  asignacionId
+                }
+                disabled={
+                  !seccionId
+                }
+                style={{
+                  width:
+                    '100%',
+
+                  marginTop:
+                    7,
+                }}
+                options={
+                  cursos.map(
+                    (
+                      curso,
+                    ) => ({
+                      value:
+                        curso.asignacion_id,
+
+                      label:
+                        `${curso.codigo_curso} - ${curso.curso}`,
+                    }),
+                  )
+                }
+                onChange={(
+                  valor,
+                ) => {
+                  setAsignacionId(
+                    Number(
+                      valor,
+                    ),
+                  );
+
+                  limpiarResultado();
+                }}
+              />
+            </Col>
+
+            {/* FECHA */}
+
+            <Col
+              xs={24}
+              md={6}
+            >
+              <Text strong>
+                Fecha
+              </Text>
+
+              <Input
+                type="date"
+                prefix={
+                  <CalendarOutlined />
+                }
+                value={
+                  fecha
+                }
+                style={{
+                  marginTop:
+                    7,
+                }}
+                onChange={(
+                  evento,
+                ) => {
+                  setFecha(
+                    evento.target.value,
+                  );
+
+                  limpiarResultado();
+                }}
+              />
+            </Col>
+
+            {/* ACCIONES */}
+
+            <Col
+              xs={24}
+              md={6}
+            >
+              <Space>
+                <Button
+                  type="primary"
+                  icon={
+                    <SearchOutlined />
+                  }
+                  loading={
+                    buscando
+                  }
+                  onClick={() => {
+                    void buscarHistorial();
+                  }}
+                >
+                  Buscar
+                </Button>
+
+                <Button
+                  onClick={
+                    limpiarFiltros
+                  }
+                >
+                  Limpiar
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* ================================= */}
+        {/* SIN RESULTADOS */}
+        {/* ================================= */}
+
+        {consultaRealizada &&
+          resultados.length ===
+            0 && (
+            <Alert
+              type="info"
+              showIcon
+              message="No se encontraron asistencias para la clase, curso y fecha seleccionados."
               style={{
-                width:
-                  '100%',
-
                 marginTop:
-                  8,
+                  20,
               }}
-              placeholder="Todos los cursos"
-              value={
-                filtroAsignacionId
-              }
-              options={
-                cursosFiltro.map(
-                  (
-                    asignacion,
-                  ) => ({
-                    value:
-                      asignacion.asignacion_id,
-
-                    label:
-                      `${asignacion.codigo_curso} - ${asignacion.curso}`,
-                  }),
-                )
-              }
-              onChange={
-                setFiltroAsignacionId
-              }
             />
-          </Col>
+          )}
 
-          <Col
-            xs={24}
-            md={8}
-          >
-            <Text strong>
-              Estado
-            </Text>
+        {/* ================================= */}
+        {/* RESULTADOS */}
+        {/* ================================= */}
 
-            <Select
-              allowClear
-              style={{
-                width:
-                  '100%',
-
-                marginTop:
-                  8,
-              }}
-              placeholder="Todos los estados"
-              value={
-                filtroEstado
-              }
-              options={[
-                {
-                  value:
-                    'CERRADA',
-
-                  label:
-                    'Cerrada',
-                },
-
-                {
-                  value:
-                    'ABIERTA',
-
-                  label:
-                    'Abierta',
-                },
-
-                {
-                  value:
-                    'CANCELADA',
-
-                  label:
-                    'Cancelada',
-                },
-              ]}
-              onChange={
-                setFiltroEstado
-              }
-            />
-          </Col>
-        </Row>
-      </Card>
-
-      {/* ================================= */}
-      {/* HISTORIAL */}
-      {/* ================================= */}
-
-      <Card
-        title={
-          <Space>
-            <HistoryOutlined />
-
-            Sesiones realizadas
-          </Space>
-        }
-      >
-        {cargando ? (
-          <div
-            style={{
-              textAlign:
-                'center',
-
-              padding:
-                50,
-            }}
-          >
-            <Spin
-              size="large"
-            />
-          </div>
-        ) : sesionesFiltradas.length ===
-          0 ? (
-          <Alert
-            type="info"
-            showIcon
-            message="No se encontraron sesiones de asistencia."
-          />
-        ) : (
-          <Table
-            rowKey="id"
-            columns={
-              columnas
-            }
-            dataSource={
-              sesionesFiltradas
-            }
-            pagination={{
-              pageSize:
-                10,
-
-              showSizeChanger:
-                true,
-
-              showTotal: (
-                total,
-              ) =>
-                `Total: ${total} sesiones`,
-            }}
-            scroll={{
-              x:
-                1400,
-            }}
-          />
-        )}
-      </Card>
-
-      {/* ================================= */}
-      {/* DETALLE */}
-      {/* ================================= */}
-
-      <Modal
-        title={
-          sesionSeleccionada
-            ? `Detalle de asistencia - Sesion #${sesionSeleccionada.id}`
-            : 'Detalle de asistencia'
-        }
-        open={
-          modalAbierto
-        }
-        onCancel={() =>
-          setModalAbierto(
-            false,
-          )
-        }
-        footer={[
-          <Button
-            key="cerrar"
-            onClick={() =>
-              setModalAbierto(
-                false,
-              )
-            }
-          >
-            Cerrar
-          </Button>,
-        ]}
-        width={
-          1000
-        }
-      >
-        {cargandoDetalle ? (
-          <div
-            style={{
-              textAlign:
-                'center',
-
-              padding:
-                50,
-            }}
-          >
-            <Spin />
-          </div>
-        ) : sesionSeleccionada ? (
-          <>
-            {/* INFORMACION */}
-
+        {consultaRealizada &&
+          resultados.length >
+            0 && (
             <Card
-              size="small"
               style={{
-                marginBottom:
+                marginTop:
                   20,
               }}
             >
-              <Row
-                gutter={[
-                  16,
-                  16,
-                ]}
+              <div
+                style={{
+                  marginBottom:
+                    20,
+                }}
               >
-                <Col
-                  xs={24}
-                  md={12}
+                <Title
+                  level={4}
+                  style={{
+                    margin:
+                      0,
+                  }}
                 >
-                  <Text strong>
-                    Clase:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      obtenerNombreClase(
-                        sesionSeleccionada,
-                      )
-                    }
-                  </Text>
-                </Col>
-
-                <Col
-                  xs={24}
-                  md={12}
-                >
-                  <Text strong>
-                    Curso:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      sesionSeleccionada.codigo_curso
-                    }{' '}
-                    -{' '}
-                    {
-                      sesionSeleccionada.curso
-                    }
-                  </Text>
-                </Col>
-
-                <Col
-                  xs={12}
-                  md={6}
-                >
-                  <Text strong>
-                    Fecha:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      formatearFecha(
-                        sesionSeleccionada.fecha_sesion,
-                      )
-                    }
-                  </Text>
-                </Col>
-
-                <Col
-                  xs={12}
-                  md={6}
-                >
-                  <Text strong>
-                    Inicio:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      formatearHora(
-                        sesionSeleccionada.hora_inicio,
-                      )
-                    }
-                  </Text>
-                </Col>
-
-                <Col
-                  xs={12}
-                  md={6}
-                >
-                  <Text strong>
-                    Fin:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      formatearHora(
-                        sesionSeleccionada.hora_fin,
-                      )
-                    }
-                  </Text>
-                </Col>
-
-                <Col
-                  xs={12}
-                  md={6}
-                >
-                  <Text strong>
-                    Estado:
-                  </Text>
-
-                  <br />
-
                   {
-                    etiquetaEstado(
-                      sesionSeleccionada.estado,
+                    asignacionSeleccionada
+                      ?.curso
+                  }
+                </Title>
+
+                <Text
+                  type="secondary"
+                >
+                  {
+                    asignacionSeleccionada
+                      ? obtenerNombreClase(
+                          asignacionSeleccionada,
+                        )
+                      : ''
+                  }
+                  {' · '}
+                  {
+                    formatearFecha(
+                      fecha,
                     )
                   }
-                </Col>
-              </Row>
+                  {' · '}
+                  {
+                    resultados.length
+                  }{' '}
+                  {
+                    resultados.length ===
+                    1
+                      ? 'sesión encontrada'
+                      : 'sesiones encontradas'
+                  }
+                </Text>
+              </div>
+
+              <Table
+                rowKey="id"
+                columns={
+                  columnas
+                }
+                dataSource={
+                  resultados
+                }
+                pagination={
+                  false
+                }
+                scroll={{
+                  x:
+                    850,
+                }}
+              />
             </Card>
+          )}
 
-            {/* RESUMEN */}
+        {/* ================================= */}
+        {/* MODAL DETALLE */}
+        {/* ================================= */}
 
-            <Row
-              gutter={[
-                16,
-                16,
-              ]}
+        <Modal
+          title={
+            sesionSeleccionada
+              ? `Asistencia - ${sesionSeleccionada.curso}`
+              : 'Detalle de asistencia'
+          }
+          open={
+            modalAbierto
+          }
+          width={
+            900
+          }
+          onCancel={() =>
+            setModalAbierto(
+              false,
+            )
+          }
+          footer={[
+            <Button
+              key="cerrar"
+              onClick={() =>
+                setModalAbierto(
+                  false,
+                )
+              }
+            >
+              Cerrar
+            </Button>,
+          ]}
+        >
+          {cargandoDetalle ? (
+            <div
               style={{
-                marginBottom:
-                  20,
+                display:
+                  'flex',
+
+                justifyContent:
+                  'center',
+
+                padding:
+                  50,
               }}
             >
-              <Col
-                xs={12}
-                md={4}
+              <Spin />
+            </div>
+          ) : sesionSeleccionada ? (
+            <>
+              {/* INFORMACION SESION */}
+
+              <Card
+                size="small"
+                style={{
+                  marginBottom:
+                    18,
+                }}
               >
-                <Card>
-                  <Statistic
-                    title="Total"
-                    value={
-                      sesionSeleccionada
-                        .resumen
-                        .total_registros
-                    }
-                  />
-                </Card>
-              </Col>
+                <Row
+                  gutter={[
+                    16,
+                    16,
+                  ]}
+                >
+                  <Col
+                    xs={24}
+                    md={12}
+                  >
+                    <Text strong>
+                      Clase
+                    </Text>
 
-              <Col
-                xs={12}
-                md={4}
-              >
-                <Card>
-                  <Statistic
-                    title="Presentes"
-                    value={
-                      sesionSeleccionada
-                        .resumen
-                        .presentes
-                    }
-                  />
-                </Card>
-              </Col>
+                    <br />
 
-              <Col
-                xs={12}
-                md={4}
-              >
-                <Card>
-                  <Statistic
-                    title="Ausentes"
-                    value={
-                      sesionSeleccionada
-                        .resumen
-                        .ausentes
-                    }
-                  />
-                </Card>
-              </Col>
+                    <Text>
+                      {
+                        obtenerNombreClase(
+                          sesionSeleccionada,
+                        )
+                      }
+                    </Text>
+                  </Col>
 
-              <Col
-                xs={12}
-                md={6}
-              >
-                <Card>
-                  <Statistic
-                    title="Asistencia"
-                    value={
-                      porcentajeSesion(
-                        sesionSeleccionada,
-                      )
-                    }
-                    precision={
-                      1
-                    }
-                    suffix="%"
-                  />
-                </Card>
-              </Col>
-            </Row>
+                  <Col
+                    xs={24}
+                    md={12}
+                  >
+                    <Text strong>
+                      Curso
+                    </Text>
 
-            {/* ESTUDIANTES */}
+                    <br />
 
-            <Table
-              rowKey="asistencia_id"
-              columns={
-                columnasDetalle
-              }
-              dataSource={
-                detalle
-              }
-              pagination={
-                false
-              }
-              locale={{
-                emptyText:
-                  'Esta sesion no tiene registros de asistencia.',
-              }}
-              scroll={{
-                x:
-                  700,
-              }}
-            />
-          </>
-        ) : null}
-      </Modal>
+                    <Text>
+                      {
+                        sesionSeleccionada.curso
+                      }
+                    </Text>
+                  </Col>
+
+                  <Col
+                    xs={12}
+                    md={6}
+                  >
+                    <Text strong>
+                      Fecha
+                    </Text>
+
+                    <br />
+
+                    <Text>
+                      {
+                        formatearFecha(
+                          sesionSeleccionada.fecha_sesion,
+                        )
+                      }
+                    </Text>
+                  </Col>
+
+                  <Col
+                    xs={12}
+                    md={6}
+                  >
+                    <Text strong>
+                      Inicio
+                    </Text>
+
+                    <br />
+
+                    <Text>
+                      {
+                        formatearHora(
+                          sesionSeleccionada.hora_inicio,
+                        )
+                      }
+                    </Text>
+                  </Col>
+
+                  <Col
+                    xs={12}
+                    md={6}
+                  >
+                    <Text strong>
+                      Fin
+                    </Text>
+
+                    <br />
+
+                    <Text>
+                      {
+                        formatearHora(
+                          sesionSeleccionada.hora_fin,
+                        )
+                      }
+                    </Text>
+                  </Col>
+
+                  <Col
+                    xs={12}
+                    md={6}
+                  >
+                    <Text strong>
+                      Estado
+                    </Text>
+
+                    <br />
+
+                    <Tag
+                      color={
+                        colorEstadoSesion(
+                          sesionSeleccionada.estado,
+                        )
+                      }
+                    >
+                      {
+                        sesionSeleccionada.estado
+                      }
+                    </Tag>
+                  </Col>
+                </Row>
+              </Card>
+
+              {/* ESTUDIANTES */}
+
+              <Table
+                rowKey="asistencia_id"
+                columns={
+                  columnasDetalle
+                }
+                dataSource={
+                  detalle
+                }
+                pagination={
+                  false
+                }
+                locale={{
+                  emptyText:
+                    'Esta sesión todavía no tiene registros de asistencia.',
+                }}
+                scroll={{
+                  x:
+                    650,
+                }}
+              />
+            </>
+          ) : null}
+        </Modal>
+      </div>
     </div>
   );
 }

@@ -1,12 +1,8 @@
 import {
   ArrowLeftOutlined,
   CalendarOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   EyeOutlined,
-  FileTextOutlined,
-  ReloadOutlined,
-  TeamOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -14,7 +10,6 @@ import {
   Button,
   Card,
   Col,
-  Divider,
   Input,
   message,
   Modal,
@@ -22,7 +17,6 @@ import {
   Select,
   Space,
   Spin,
-  Statistic,
   Table,
   Tag,
   Typography,
@@ -54,6 +48,20 @@ const {
 // =====================================
 // INTERFACES
 // =====================================
+
+interface Docente {
+  id:
+    number;
+
+  codigo_docente:
+    string;
+
+  nombre_completo:
+    string;
+
+  activo:
+    boolean;
+}
 
 interface ResumenSesion {
   total_registros:
@@ -125,17 +133,6 @@ interface Sesion {
     ResumenSesion;
 }
 
-interface DocenteFiltro {
-  docente_id:
-    number;
-
-  codigo_docente:
-    string;
-
-  docente:
-    string;
-}
-
 interface AsistenciaDetalle {
   asistencia_id:
     number;
@@ -162,20 +159,6 @@ interface AsistenciaDetalle {
     string;
 }
 
-interface GrupoDocente {
-  docente_id:
-    number;
-
-  codigo_docente:
-    string;
-
-  docente:
-    string;
-
-  sesiones:
-    Sesion[];
-}
-
 // =====================================
 // COMPONENTE
 // =====================================
@@ -185,12 +168,24 @@ export default function ReporteAsistenciasAdmin() {
     useNavigate();
 
   // =====================================
-  // DATOS
+  // DOCENTES
   // =====================================
 
   const [
-    sesiones,
-    setSesiones,
+    docentes,
+    setDocentes,
+  ] =
+    useState<
+      Docente[]
+    >([]);
+
+  // =====================================
+  // RESULTADOS
+  // =====================================
+
+  const [
+    resultados,
+    setResultados,
   ] =
     useState<
       Sesion[]
@@ -241,10 +236,22 @@ export default function ReporteAsistenciasAdmin() {
   // =====================================
 
   const [
-    cargando,
-    setCargando,
+    cargandoDocentes,
+    setCargandoDocentes,
   ] =
     useState(true);
+
+  const [
+    buscando,
+    setBuscando,
+  ] =
+    useState(false);
+
+  const [
+    consultaRealizada,
+    setConsultaRealizada,
+  ] =
+    useState(false);
 
   const [
     cargandoDetalle,
@@ -259,7 +266,7 @@ export default function ReporteAsistenciasAdmin() {
     useState(false);
 
   // =====================================
-  // ERROR API
+  // ERROR
   // =====================================
 
   const obtenerMensajeError = (
@@ -295,11 +302,21 @@ export default function ReporteAsistenciasAdmin() {
       );
     }
 
+    if (
+      error instanceof
+      Error
+    ) {
+      return (
+        error.message ||
+        predeterminado
+      );
+    }
+
     return predeterminado;
   };
 
   // =====================================
-  // FECHA NORMALIZADA
+  // FECHA SIMPLE
   // =====================================
 
   const obtenerFechaSimple = (
@@ -365,7 +382,7 @@ export default function ReporteAsistenciasAdmin() {
     ) {
       return valor.substring(
         0,
-        8,
+        5,
       );
     }
 
@@ -416,306 +433,189 @@ export default function ReporteAsistenciasAdmin() {
 
     return mostrarSeccion
       ? `${sesion.grado} - Sección ${sesion.seccion}`
-      : `${sesion.grado}`;
+      : sesion.grado;
   };
 
   // =====================================
-  // DOCENTES DISPONIBLES
+  // DOCENTE SELECCIONADO
   // =====================================
 
-  const docentes:
-    DocenteFiltro[] =
-    useMemo(
-      () => {
-        const mapa =
-          new Map<
-            number,
-            DocenteFiltro
-          >();
-
-        sesiones.forEach(
-          (
-            sesion,
-          ) => {
-            mapa.set(
-              Number(
-                sesion.docente_id,
-              ),
-              {
-                docente_id:
-                  Number(
-                    sesion.docente_id,
-                  ),
-
-                codigo_docente:
-                  sesion.codigo_docente,
-
-                docente:
-                  sesion.docente,
-              },
-            );
-          },
-        );
-
-        return Array.from(
-          mapa.values(),
-        ).sort(
-          (
-            a,
-            b,
-          ) =>
-            a.docente.localeCompare(
-              b.docente,
-              'es',
-            ),
-        );
-      },
-      [
-        sesiones,
-      ],
-    );
-
-  // =====================================
-  // FILTRAR SESIONES
-  // =====================================
-
-  const sesionesFiltradas =
+  const docenteSeleccionado =
     useMemo(
       () =>
-        sesiones.filter(
+        docentes.find(
           (
-            sesion,
-          ) => {
-            // No incluir sesiones
-            // canceladas en reportes.
-
-            if (
-              sesion.estado ===
-              'CANCELADA'
-            ) {
-              return false;
-            }
-
-            const cumpleDocente =
-              !docenteId ||
-              Number(
-                sesion.docente_id,
-              ) ===
-                Number(
-                  docenteId,
-                );
-
-            const fecha =
-              obtenerFechaSimple(
-                sesion.fecha_sesion,
-              );
-
-            const cumpleDesde =
-              !fechaDesde ||
-              fecha >=
-                fechaDesde;
-
-            const cumpleHasta =
-              !fechaHasta ||
-              fecha <=
-                fechaHasta;
-
-            return (
-              cumpleDocente &&
-              cumpleDesde &&
-              cumpleHasta
-            );
-          },
-        ),
-      [
-        sesiones,
-        docenteId,
-        fechaDesde,
-        fechaHasta,
-      ],
-    );
-
-  // =====================================
-  // AGRUPAR POR DOCENTE
-  // =====================================
-
-  const gruposDocentes:
-    GrupoDocente[] =
-    useMemo(
-      () => {
-        const mapa =
-          new Map<
-            number,
-            GrupoDocente
-          >();
-
-        sesionesFiltradas.forEach(
-          (
-            sesion,
-          ) => {
-            const id =
-              Number(
-                sesion.docente_id,
-              );
-
-            if (
-              !mapa.has(
-                id,
-              )
-            ) {
-              mapa.set(
-                id,
-                {
-                  docente_id:
-                    id,
-
-                  codigo_docente:
-                    sesion.codigo_docente,
-
-                  docente:
-                    sesion.docente,
-
-                  sesiones:
-                    [],
-                },
-              );
-            }
-
-            mapa
-              .get(
-                id,
-              )
-              ?.sesiones.push(
-                sesion,
-              );
-          },
-        );
-
-        const grupos =
-          Array.from(
-            mapa.values(),
-          );
-
-        grupos.forEach(
-          (
-            grupo,
-          ) => {
-            grupo.sesiones.sort(
-              (
-                a,
-                b,
-              ) => {
-                const fechaA =
-                  `${obtenerFechaSimple(
-                    a.fecha_sesion,
-                  )}-${a.hora_inicio}`;
-
-                const fechaB =
-                  `${obtenerFechaSimple(
-                    b.fecha_sesion,
-                  )}-${b.hora_inicio}`;
-
-                return fechaB.localeCompare(
-                  fechaA,
-                );
-              },
-            );
-          },
-        );
-
-        return grupos.sort(
-          (
-            a,
-            b,
+            docente,
           ) =>
-            a.docente.localeCompare(
-              b.docente,
-              'es',
-            ),
-        );
-      },
+            Number(
+              docente.id,
+            ) ===
+              Number(
+                docenteId,
+              ),
+        ) ??
+        null,
       [
-        sesionesFiltradas,
+        docentes,
+        docenteId,
       ],
     );
 
   // =====================================
-  // TOTALES
+  // CARGAR DOCENTES
+  //
+  // SOLO CARGA EL CATALOGO.
+  // NO CARGA ASISTENCIAS.
   // =====================================
 
-  const totalSesiones =
-    sesionesFiltradas.length;
-
-  const totalPresentes =
-    sesionesFiltradas.reduce(
-      (
-        acumulado,
-        sesion,
-      ) =>
-        acumulado +
-        Number(
-          sesion.resumen.presentes,
-        ),
-      0,
-    );
-
-  const totalAusentes =
-    sesionesFiltradas.reduce(
-      (
-        acumulado,
-        sesion,
-      ) =>
-        acumulado +
-        Number(
-          sesion.resumen.ausentes,
-        ),
-      0,
-    );
-
-  // =====================================
-  // PORCENTAJE DE SESION
-  // =====================================
-
-  const porcentaje = (
-    sesion:
-      Sesion,
-  ) => {
-    const total =
-      Number(
-        sesion.resumen
-          .total_registros,
-      );
-
-    if (
-      total ===
-      0
-    ) {
-      return 0;
-    }
-
-    return (
-      Number(
-        sesion.resumen
-          .presentes,
-      ) /
-      total
-    ) *
-      100;
-  };
-
-  // =====================================
-  // CARGAR REPORTE
-  // =====================================
-
-  const cargarReporte =
+  const cargarDocentes =
     async () => {
       try {
-        setCargando(
+        setCargandoDocentes(
           true,
         );
 
+        const respuesta =
+          await api.get(
+            '/docentes',
+          );
+
+        const datos =
+          respuesta.data
+            .datos ?? [];
+
+        const normalizados:
+          Docente[] =
+          datos.map(
+            (
+              docente:
+                any,
+            ) => ({
+              id:
+                Number(
+                  docente.id,
+                ),
+
+              codigo_docente:
+                docente.codigo_docente,
+
+              nombre_completo:
+                docente.nombre_completo,
+
+              activo:
+                Boolean(
+                  docente.activo,
+                ),
+            }),
+          );
+
+        setDocentes(
+          normalizados,
+        );
+      } catch (
+        error
+      ) {
+        message.error(
+          obtenerMensajeError(
+            error,
+            'No fue posible cargar los docentes.',
+          ),
+        );
+      } finally {
+        setCargandoDocentes(
+          false,
+        );
+      }
+    };
+
+  // =====================================
+  // INICIO
+  // =====================================
+
+  useEffect(
+    () => {
+      void cargarDocentes();
+    },
+    [],
+  );
+
+  // =====================================
+  // LIMPIAR RESULTADO
+  // =====================================
+
+  const limpiarResultado =
+    () => {
+      setResultados(
+        [],
+      );
+
+      setConsultaRealizada(
+        false,
+      );
+    };
+
+  // =====================================
+  // BUSCAR REPORTE
+  // =====================================
+
+  const buscarReporte =
+    async () => {
+      if (
+        !docenteId
+      ) {
+        message.warning(
+          'Seleccione un docente.',
+        );
+
+        return;
+      }
+
+      if (
+        !fechaDesde
+      ) {
+        message.warning(
+          'Seleccione la fecha inicial.',
+        );
+
+        return;
+      }
+
+      if (
+        !fechaHasta
+      ) {
+        message.warning(
+          'Seleccione la fecha final.',
+        );
+
+        return;
+      }
+
+      if (
+        fechaDesde >
+        fechaHasta
+      ) {
+        message.warning(
+          'La fecha inicial no puede ser mayor que la fecha final.',
+        );
+
+        return;
+      }
+
+      try {
+        setBuscando(
+          true,
+        );
+
+        setResultados(
+          [],
+        );
+
+        setConsultaRealizada(
+          false,
+        );
+
         // =================================
-        // TODAS LAS SESIONES
+        // OBTENER SESIONES
         // =================================
 
         const respuesta =
@@ -727,7 +627,7 @@ export default function ReporteAsistenciasAdmin() {
           respuesta.data
             .datos ?? [];
 
-        const sesionesBase:
+        const sesiones:
           Sesion[] =
           datos.map(
             (
@@ -786,12 +686,50 @@ export default function ReporteAsistenciasAdmin() {
           );
 
         // =================================
-        // RESUMEN DE CADA SESION
+        // FILTRAR POR DOCENTE Y FECHA
+        //
+        // IMPORTANTE:
+        // NO FILTRAMOS POR ESTADO.
+        // =================================
+
+        const encontradas =
+          sesiones.filter(
+            (
+              sesion,
+            ) => {
+              const esDocente =
+                Number(
+                  sesion.docente_id,
+                ) ===
+                  Number(
+                    docenteId,
+                  );
+
+              const fecha =
+                obtenerFechaSimple(
+                  sesion.fecha_sesion,
+                );
+
+              const dentroPeriodo =
+                fecha >=
+                  fechaDesde &&
+                fecha <=
+                  fechaHasta;
+
+              return (
+                esDocente &&
+                dentroPeriodo
+              );
+            },
+          );
+
+        // =================================
+        // RESUMEN SOLO DE RESULTADOS
         // =================================
 
         const completas =
           await Promise.all(
-            sesionesBase.map(
+            encontradas.map(
               async (
                 sesion,
               ) => {
@@ -854,8 +792,25 @@ export default function ReporteAsistenciasAdmin() {
             ),
           );
 
-        setSesiones(
+        completas.sort(
+          (
+            a,
+            b,
+          ) =>
+            Number(
+              b.id,
+            ) -
+            Number(
+              a.id,
+            ),
+        );
+
+        setResultados(
           completas,
+        );
+
+        setConsultaRealizada(
+          true,
         );
       } catch (
         error
@@ -863,29 +818,18 @@ export default function ReporteAsistenciasAdmin() {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible cargar el reporte de asistencias.',
+            'No fue posible consultar el reporte.',
           ),
         );
       } finally {
-        setCargando(
+        setBuscando(
           false,
         );
       }
     };
 
   // =====================================
-  // INICIO
-  // =====================================
-
-  useEffect(
-    () => {
-      void cargarReporte();
-    },
-    [],
-  );
-
-  // =====================================
-  // LIMPIAR FILTROS
+  // LIMPIAR
   // =====================================
 
   const limpiarFiltros =
@@ -901,10 +845,22 @@ export default function ReporteAsistenciasAdmin() {
       setFechaHasta(
         '',
       );
+
+      setResultados(
+        [],
+      );
+
+      setConsultaRealizada(
+        false,
+      );
+
+      setSesionSeleccionada(
+        null,
+      );
     };
 
   // =====================================
-  // ABRIR DETALLE
+  // DETALLE
   // =====================================
 
   const abrirDetalle =
@@ -984,10 +940,76 @@ export default function ReporteAsistenciasAdmin() {
     };
 
   // =====================================
-  // COLUMNAS SESIONES
+  // COLOR SESION
   // =====================================
 
-  const columnasSesiones:
+  const colorEstadoSesion =
+    (
+      estado:
+        string,
+    ) => {
+      if (
+        estado ===
+        'CERRADA'
+      ) {
+        return 'green';
+      }
+
+      if (
+        estado ===
+        'ABIERTA'
+      ) {
+        return 'blue';
+      }
+
+      if (
+        estado ===
+        'CANCELADA'
+      ) {
+        return 'red';
+      }
+
+      return 'default';
+    };
+
+  // =====================================
+  // COLOR ASISTENCIA
+  // =====================================
+
+  const colorEstadoAsistencia =
+    (
+      estado:
+        string,
+    ) => {
+      if (
+        estado ===
+        'PRESENTE'
+      ) {
+        return 'green';
+      }
+
+      if (
+        estado ===
+        'AUSENTE'
+      ) {
+        return 'red';
+      }
+
+      if (
+        estado ===
+        'TARDE'
+      ) {
+        return 'orange';
+      }
+
+      return 'blue';
+    };
+
+  // =====================================
+  // COLUMNAS REPORTE
+  // =====================================
+
+  const columnas:
     TableColumnsType<Sesion> =
     [
       {
@@ -1001,7 +1023,7 @@ export default function ReporteAsistenciasAdmin() {
           'fecha_sesion',
 
         width:
-          120,
+          130,
 
         render: (
           valor:
@@ -1032,23 +1054,40 @@ export default function ReporteAsistenciasAdmin() {
 
             <br />
 
-            <Text
-              type="secondary"
-              style={{
-                fontSize:
-                  12,
-              }}
+            <Space
+              size={6}
+              wrap
             >
-              {
-                sesion.codigo_curso
-              }
-              {' · '}
-              {
-                obtenerNombreClase(
-                  sesion,
-                )
-              }
-            </Text>
+              <Text
+                type="secondary"
+                style={{
+                  fontSize:
+                    12,
+                }}
+              >
+                {
+                  sesion.codigo_curso
+                }
+                {' · '}
+                {
+                  obtenerNombreClase(
+                    sesion,
+                  )
+                }
+              </Text>
+
+              <Tag
+                color={
+                  colorEstadoSesion(
+                    sesion.estado,
+                  )
+                }
+              >
+                {
+                  sesion.estado
+                }
+              </Tag>
+            </Space>
           </div>
         ),
       },
@@ -1061,7 +1100,7 @@ export default function ReporteAsistenciasAdmin() {
           'horario',
 
         width:
-          180,
+          190,
 
         render: (
           _,
@@ -1082,7 +1121,7 @@ export default function ReporteAsistenciasAdmin() {
           'presentes',
 
         width:
-          105,
+          110,
 
         align:
           'center',
@@ -1110,7 +1149,7 @@ export default function ReporteAsistenciasAdmin() {
           'ausentes',
 
         width:
-          105,
+          110,
 
         align:
           'center',
@@ -1132,69 +1171,13 @@ export default function ReporteAsistenciasAdmin() {
 
       {
         title:
-          'Asistencia',
+          'Detalle',
 
         key:
-          'porcentaje',
+          'detalle',
 
         width:
-          115,
-
-        align:
-          'center',
-
-        render: (
-          _,
-          sesion,
-        ) =>
-          `${porcentaje(
-            sesion,
-          ).toFixed(
-            1,
-          )}%`,
-      },
-
-      {
-        title:
-          'Estado',
-
-        dataIndex:
-          'estado',
-
-        key:
-          'estado',
-
-        width:
-          110,
-
-        render: (
-          estado:
-            string,
-        ) => (
-          <Tag
-            color={
-              estado ===
-              'CERRADA'
-                ? 'green'
-                : 'blue'
-            }
-          >
-            {
-              estado
-            }
-          </Tag>
-        ),
-      },
-
-      {
-        title:
-          '',
-
-        key:
-          'accion',
-
-        width:
-          115,
+          120,
 
         render: (
           _,
@@ -1210,7 +1193,7 @@ export default function ReporteAsistenciasAdmin() {
               );
             }}
           >
-            Detalle
+            Ver
           </Button>
         ),
       },
@@ -1270,41 +1253,53 @@ export default function ReporteAsistenciasAdmin() {
         ) => (
           <Tag
             color={
-              estado ===
-              'PRESENTE'
-                ? 'green'
-                : 'red'
+              colorEstadoAsistencia(
+                estado,
+              )
             }
           >
-            {
-              estado
-            }
+            {estado}
           </Tag>
         ),
       },
 
       {
         title:
-          'Hora',
+          'Hora registrada',
 
         key:
           'hora',
 
         width:
-          150,
+          170,
 
         render: (
           _,
           asistencia,
         ) =>
-          asistencia.estado ===
-          'PRESENTE'
+          asistencia.fecha_hora_asistencia
             ? formatearHora(
                 asistencia.fecha_hora_asistencia,
               )
             : '-',
       },
     ];
+
+  // =====================================
+  // TEXTO PERIODO
+  // =====================================
+
+  const textoPeriodo =
+    fechaDesde ===
+    fechaHasta
+      ? formatearFecha(
+          fechaDesde,
+        )
+      : `${formatearFecha(
+          fechaDesde,
+        )} al ${formatearFecha(
+          fechaHasta,
+        )}`;
 
   // =====================================
   // VISTA
@@ -1315,9 +1310,7 @@ export default function ReporteAsistenciasAdmin() {
       className="pagina-administracion"
     >
       <div>
-        {/* ================================= */}
-        {/* ENCABEZADO */}
-        {/* ================================= */}
+        {/* REGRESAR */}
 
         <Button
           type="text"
@@ -1334,52 +1327,36 @@ export default function ReporteAsistenciasAdmin() {
           Regresar
         </Button>
 
+        {/* ENCABEZADO */}
+
         <div
-          className="pagina-encabezado"
-        >
-          <div>
-            <Title
-              level={2}
-              style={{
-                marginBottom:
-                  4,
-              }}
-            >
-              Reporte de asistencias
-            </Title>
-
-            <Text
-              type="secondary"
-            >
-              Consulte las clases
-              impartidas por cada
-              docente y los resultados
-              de asistencia por fecha.
-            </Text>
-          </div>
-
-          <Button
-            icon={
-              <ReloadOutlined />
-            }
-            onClick={() => {
-              void cargarReporte();
-            }}
-          >
-            Actualizar
-          </Button>
-        </div>
-
-        {/* ================================= */}
-        {/* FILTROS */}
-        {/* ================================= */}
-
-        <Card
           style={{
             marginBottom:
-              20,
+              22,
           }}
         >
+          <Title
+            level={2}
+            style={{
+              marginBottom:
+                4,
+            }}
+          >
+            Reporte de asistencias
+          </Title>
+
+          <Text
+            type="secondary"
+          >
+            Consulte las sesiones
+            realizadas por un docente
+            dentro de un período.
+          </Text>
+        </div>
+
+        {/* BUSQUEDA */}
+
+        <Card>
           <Row
             gutter={[
               16,
@@ -1387,21 +1364,28 @@ export default function ReporteAsistenciasAdmin() {
             ]}
             align="bottom"
           >
+            {/* DOCENTE */}
+
             <Col
               xs={24}
-              lg={10}
+              lg={9}
             >
               <Text strong>
                 Docente
               </Text>
 
               <Select
-                allowClear
                 showSearch
                 optionFilterProp="label"
-                placeholder="Todos los docentes"
+                placeholder="Seleccione un docente"
                 value={
                   docenteId
+                }
+                loading={
+                  cargandoDocentes
+                }
+                disabled={
+                  cargandoDocentes
                 }
                 style={{
                   width:
@@ -1416,18 +1400,28 @@ export default function ReporteAsistenciasAdmin() {
                       docente,
                     ) => ({
                       value:
-                        docente.docente_id,
+                        docente.id,
 
                       label:
-                        `${docente.codigo_docente} - ${docente.docente}`,
+                        `${docente.codigo_docente} - ${docente.nombre_completo}`,
                     }),
                   )
                 }
-                onChange={
-                  setDocenteId
-                }
+                onChange={(
+                  valor,
+                ) => {
+                  setDocenteId(
+                    Number(
+                      valor,
+                    ),
+                  );
+
+                  limpiarResultado();
+                }}
               />
             </Col>
+
+            {/* DESDE */}
 
             <Col
               xs={24}
@@ -1440,25 +1434,29 @@ export default function ReporteAsistenciasAdmin() {
 
               <Input
                 type="date"
-                value={
-                  fechaDesde
-                }
-                onChange={(
-                  evento,
-                ) =>
-                  setFechaDesde(
-                    evento.target.value,
-                  )
-                }
                 prefix={
                   <CalendarOutlined />
+                }
+                value={
+                  fechaDesde
                 }
                 style={{
                   marginTop:
                     7,
                 }}
+                onChange={(
+                  evento,
+                ) => {
+                  setFechaDesde(
+                    evento.target.value,
+                  );
+
+                  limpiarResultado();
+                }}
               />
             </Col>
+
+            {/* HASTA */}
 
             <Col
               xs={24}
@@ -1471,337 +1469,169 @@ export default function ReporteAsistenciasAdmin() {
 
               <Input
                 type="date"
-                value={
-                  fechaHasta
-                }
-                onChange={(
-                  evento,
-                ) =>
-                  setFechaHasta(
-                    evento.target.value,
-                  )
-                }
                 prefix={
                   <CalendarOutlined />
+                }
+                value={
+                  fechaHasta
                 }
                 style={{
                   marginTop:
                     7,
                 }}
+                onChange={(
+                  evento,
+                ) => {
+                  setFechaHasta(
+                    evento.target.value,
+                  );
+
+                  limpiarResultado();
+                }}
               />
             </Col>
+
+            {/* ACCIONES */}
 
             <Col
               xs={24}
-              lg={4}
+              lg={5}
             >
-              <Button
-                block
-                onClick={
-                  limpiarFiltros
-                }
-              >
-                Limpiar filtros
-              </Button>
-            </Col>
-          </Row>
-
-          {fechaDesde &&
-            fechaHasta &&
-            fechaDesde >
-              fechaHasta && (
-              <Alert
-                type="warning"
-                showIcon
-                message="La fecha inicial no puede ser mayor que la fecha final."
-                style={{
-                  marginTop:
-                    16,
-                }}
-              />
-            )}
-        </Card>
-
-        {/* ================================= */}
-        {/* TOTALES */}
-        {/* ================================= */}
-
-        <Row
-          gutter={[
-            16,
-            16,
-          ]}
-          style={{
-            marginBottom:
-              20,
-          }}
-        >
-          <Col
-            xs={12}
-            md={6}
-          >
-            <Card>
-              <Statistic
-                title="Docentes"
-                value={
-                  gruposDocentes.length
-                }
-                prefix={
-                  <TeamOutlined />
-                }
-              />
-            </Card>
-          </Col>
-
-          <Col
-            xs={12}
-            md={6}
-          >
-            <Card>
-              <Statistic
-                title="Sesiones"
-                value={
-                  totalSesiones
-                }
-                prefix={
-                  <FileTextOutlined />
-                }
-              />
-            </Card>
-          </Col>
-
-          <Col
-            xs={12}
-            md={6}
-          >
-            <Card>
-              <Statistic
-                title="Presentes"
-                value={
-                  totalPresentes
-                }
-                prefix={
-                  <CheckCircleOutlined />
-                }
-              />
-            </Card>
-          </Col>
-
-          <Col
-            xs={12}
-            md={6}
-          >
-            <Card>
-              <Statistic
-                title="Ausentes"
-                value={
-                  totalAusentes
-                }
-                prefix={
-                  <CloseCircleOutlined />
-                }
-              />
-            </Card>
-          </Col>
-        </Row>
-
-        {/* ================================= */}
-        {/* RESULTADOS */}
-        {/* ================================= */}
-
-        {cargando ? (
-          <Card>
-            <div
-              style={{
-                display:
-                  'flex',
-
-                justifyContent:
-                  'center',
-
-                padding:
-                  60,
-              }}
-            >
-              <Spin
-                size="large"
-              />
-            </div>
-          </Card>
-        ) : gruposDocentes.length ===
-          0 ? (
-          <Alert
-            type="info"
-            showIcon
-            message="No se encontraron asistencias para los filtros seleccionados."
-          />
-        ) : (
-          gruposDocentes.map(
-            (
-              grupo,
-            ) => {
-              const presentesDocente =
-                grupo.sesiones.reduce(
-                  (
-                    total,
-                    sesion,
-                  ) =>
-                    total +
-                    Number(
-                      sesion.resumen
-                        .presentes,
-                    ),
-                  0,
-                );
-
-              const ausentesDocente =
-                grupo.sesiones.reduce(
-                  (
-                    total,
-                    sesion,
-                  ) =>
-                    total +
-                    Number(
-                      sesion.resumen
-                        .ausentes,
-                    ),
-                  0,
-                );
-
-              return (
-                <Card
-                  key={
-                    grupo.docente_id
+              <Space>
+                <Button
+                  type="primary"
+                  icon={
+                    <SearchOutlined />
                   }
-                  style={{
-                    marginBottom:
-                      20,
+                  loading={
+                    buscando
+                  }
+                  onClick={() => {
+                    void buscarReporte();
                   }}
                 >
-                  <Row
-                    gutter={[
-                      16,
-                      16,
-                    ]}
-                    align="middle"
-                  >
-                    <Col
-                      xs={24}
-                      md={12}
-                    >
-                      <Space
-                        align="start"
-                      >
-                        <TeamOutlined
-                          style={{
-                            fontSize:
-                              22,
+                  Buscar
+                </Button>
 
-                            color:
-                              '#1f4e68',
+                <Button
+                  onClick={
+                    limpiarFiltros
+                  }
+                >
+                  Limpiar
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
 
-                            marginTop:
-                              4,
-                          }}
-                        />
+        {/* SIN RESULTADOS */}
 
-                        <div>
-                          <Title
-                            level={4}
-                            style={{
-                              margin:
-                                0,
-                            }}
-                          >
-                            {
-                              grupo.docente
-                            }
-                          </Title>
+        {consultaRealizada &&
+          resultados.length ===
+            0 && (
+            <Alert
+              type="info"
+              showIcon
+              message="No se encontraron asistencias para el docente y período seleccionados."
+              style={{
+                marginTop:
+                  20,
+              }}
+            />
+          )}
 
-                          <Text
-                            type="secondary"
-                          >
-                            {
-                              grupo.codigo_docente
-                            }
-                          </Text>
-                        </div>
-                      </Space>
-                    </Col>
+        {/* RESULTADOS */}
 
-                    <Col
-                      xs={8}
-                      md={4}
-                    >
-                      <Statistic
-                        title="Cursos / sesiones"
-                        value={
-                          grupo.sesiones.length
-                        }
-                      />
-                    </Col>
+        {consultaRealizada &&
+          resultados.length >
+            0 &&
+          docenteSeleccionado && (
+            <Card
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <div
+                style={{
+                  marginBottom:
+                    20,
+                }}
+              >
+                <Title
+                  level={4}
+                  style={{
+                    margin:
+                      0,
+                  }}
+                >
+                  {
+                    docenteSeleccionado.nombre_completo
+                  }
+                  {' · '}
+                  {
+                    docenteSeleccionado.codigo_docente
+                  }
+                </Title>
 
-                    <Col
-                      xs={8}
-                      md={4}
-                    >
-                      <Statistic
-                        title="Presentes"
-                        value={
-                          presentesDocente
-                        }
-                      />
-                    </Col>
+                <Text
+                  type="secondary"
+                >
+                  {
+                    textoPeriodo
+                  }
+                  {' · '}
+                  {
+                    resultados.length
+                  }{' '}
+                  {
+                    resultados.length ===
+                    1
+                      ? 'sesión encontrada'
+                      : 'sesiones encontradas'
+                  }
+                </Text>
+              </div>
 
-                    <Col
-                      xs={8}
-                      md={4}
-                    >
-                      <Statistic
-                        title="Ausentes"
-                        value={
-                          ausentesDocente
-                        }
-                      />
-                    </Col>
-                  </Row>
+              <Table
+                rowKey="id"
+                columns={
+                  columnas
+                }
+                dataSource={
+                  resultados
+                }
+                pagination={
+                  resultados.length >
+                  10
+                    ? {
+                        pageSize:
+                          10,
+                      }
+                    : false
+                }
+                scroll={{
+                  x:
+                    850,
+                }}
+              />
+            </Card>
+          )}
 
-                  <Divider />
-
-                  <Table
-                    rowKey="id"
-                    columns={
-                      columnasSesiones
-                    }
-                    dataSource={
-                      grupo.sesiones
-                    }
-                    pagination={
-                      false
-                    }
-                    scroll={{
-                      x:
-                        1050,
-                    }}
-                  />
-                </Card>
-              );
-            },
-          )
-        )}
-
-        {/* ================================= */}
         {/* DETALLE */}
-        {/* ================================= */}
 
         <Modal
           title={
             sesionSeleccionada
-              ? `Detalle de asistencia - ${sesionSeleccionada.curso}`
+              ? `Asistencia - ${sesionSeleccionada.curso}`
               : 'Detalle de asistencia'
           }
           open={
             modalAbierto
+          }
+          width={
+            900
           }
           onCancel={() =>
             setModalAbierto(
@@ -1820,14 +1650,14 @@ export default function ReporteAsistenciasAdmin() {
               Cerrar
             </Button>,
           ]}
-          width={
-            950
-          }
         >
           {cargandoDetalle ? (
             <div
               style={{
-                textAlign:
+                display:
+                  'flex',
+
+                justifyContent:
                   'center',
 
                 padding:
@@ -1842,7 +1672,7 @@ export default function ReporteAsistenciasAdmin() {
                 size="small"
                 style={{
                   marginBottom:
-                    20,
+                    18,
                 }}
               >
                 <Row
@@ -1947,6 +1777,28 @@ export default function ReporteAsistenciasAdmin() {
                     md={6}
                   >
                     <Text strong>
+                      Estado
+                    </Text>
+
+                    <br />
+
+                    <Tag
+                      color={
+                        colorEstadoSesion(
+                          sesionSeleccionada.estado,
+                        )
+                      }
+                    >
+                      {
+                        sesionSeleccionada.estado
+                      }
+                    </Tag>
+                  </Col>
+
+                  <Col
+                    xs={24}
+                  >
+                    <Text strong>
                       Clase
                     </Text>
 
@@ -1963,62 +1815,6 @@ export default function ReporteAsistenciasAdmin() {
                 </Row>
               </Card>
 
-              <Row
-                gutter={[
-                  16,
-                  16,
-                ]}
-                style={{
-                  marginBottom:
-                    20,
-                }}
-              >
-                <Col
-                  xs={8}
-                >
-                  <Card>
-                    <Statistic
-                      title="Total"
-                      value={
-                        sesionSeleccionada
-                          .resumen
-                          .total_registros
-                      }
-                    />
-                  </Card>
-                </Col>
-
-                <Col
-                  xs={8}
-                >
-                  <Card>
-                    <Statistic
-                      title="Presentes"
-                      value={
-                        sesionSeleccionada
-                          .resumen
-                          .presentes
-                      }
-                    />
-                  </Card>
-                </Col>
-
-                <Col
-                  xs={8}
-                >
-                  <Card>
-                    <Statistic
-                      title="Ausentes"
-                      value={
-                        sesionSeleccionada
-                          .resumen
-                          .ausentes
-                      }
-                    />
-                  </Card>
-                </Col>
-              </Row>
-
               <Table
                 rowKey="asistencia_id"
                 columns={
@@ -2030,6 +1826,10 @@ export default function ReporteAsistenciasAdmin() {
                 pagination={
                   false
                 }
+                locale={{
+                  emptyText:
+                    'Esta sesión todavía no tiene registros de asistencia.',
+                }}
                 scroll={{
                   x:
                     650,
