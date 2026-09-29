@@ -18,9 +18,14 @@ import {
   AsignacionesModule,
 } from '../asignaciones/asignaciones.module';
 
+import {
+  EstudiantesModule,
+} from '../estudiantes/estudiantes.module';
+
 @Module({
   imports: [
     AsignacionesModule,
+    EstudiantesModule,
   ],
 
   controllers: [

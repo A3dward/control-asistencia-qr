@@ -2,6 +2,7 @@ import {
   ArrowLeftOutlined,
   IdcardOutlined,
   QrcodeOutlined,
+  TeamOutlined,
   UserAddOutlined,
 } from '@ant-design/icons';
 
@@ -14,13 +15,22 @@ import {
   Image,
   Input,
   message,
+  Modal,
   Row,
   Select,
   Space,
   Spin,
+  Table,
+  Tabs,
   Tag,
   Typography,
 } from 'antd';
+
+import type {
+  TableColumnsType,
+} from 'antd';
+
+import axios from 'axios';
 
 import {
   useEffect,
@@ -44,59 +54,106 @@ const {
 // =====================================
 
 interface Asignacion {
-  asignacion_id: number;
+  asignacion_id:
+    number;
 
-  activo: boolean;
+  activo:
+    boolean;
 
-  curso_id: number;
+  curso_id:
+    number;
 
-  curso: string;
+  curso:
+    string;
 
-  codigo_curso: string;
+  codigo_curso:
+    string;
 
-  seccion_id: number;
+  seccion_id:
+    number;
 
-  seccion: string;
+  seccion:
+    string;
 
-  grado: string;
+  grado:
+    string;
 
-  anio_academico: number;
+  anio_academico:
+    number;
 }
 
 interface Estudiante {
-  id: number;
+  id:
+    number;
 
-  codigo_estudiante: string;
+  codigo_estudiante:
+    string;
 
-  nombres: string;
+  nombres:
+    string;
 
-  apellidos: string;
+  apellidos:
+    string;
+}
+
+interface EstudianteClase {
+  inscripcion_id:
+    number;
+
+  estudiante_id:
+    number;
+
+  codigo_estudiante:
+    string;
+
+  nombres:
+    string;
+
+  apellidos:
+    string;
+
+  activo:
+    boolean;
+
+  estudiante_activo:
+    boolean;
 }
 
 interface FormularioEstudiante {
-  seccion_id: number;
+  seccion_id:
+    number;
 
-  codigo_estudiante: string;
+  codigo_estudiante:
+    string;
 
-  nombres: string;
+  nombres:
+    string;
 
-  apellidos: string;
+  apellidos:
+    string;
 }
 
 interface ClaseDocente {
-  id: number;
+  id:
+    number;
 
-  grado: string;
+  grado:
+    string;
 
-  seccion: string;
+  seccion:
+    string;
 
-  anio_academico: number;
+  anio_academico:
+    number;
 
-  cursos: Array<{
-    id: number;
+  cursos:
+    Array<{
+      id:
+        number;
 
-    nombre: string;
-  }>;
+      nombre:
+        string;
+    }>;
 }
 
 // =====================================
@@ -112,11 +169,101 @@ export default function EstudiantesDocente() {
   ] =
     Form.useForm<FormularioEstudiante>();
 
+  // =====================================
+  // DATOS GENERALES
+  // =====================================
+
   const [
     asignaciones,
     setAsignaciones,
   ] =
-    useState<Asignacion[]>([]);
+    useState<
+      Asignacion[]
+    >([]);
+
+  const [
+    estudiantesClase,
+    setEstudiantesClase,
+  ] =
+    useState<
+      EstudianteClase[]
+    >([]);
+
+  // =====================================
+  // CLASES SELECCIONADAS
+  // =====================================
+
+  const [
+    seccionConsulta,
+    setSeccionConsulta,
+  ] =
+    useState<
+      number | undefined
+    >(undefined);
+
+  const [
+    seccionRegistro,
+    setSeccionRegistro,
+  ] =
+    useState<
+      number | undefined
+    >(undefined);
+
+  // =====================================
+  // REGISTRO
+  // =====================================
+
+  const [
+    estudianteCreado,
+    setEstudianteCreado,
+  ] =
+    useState<
+      Estudiante | null
+    >(null);
+
+  const [
+    claseRegistrada,
+    setClaseRegistrada,
+  ] =
+    useState<
+      ClaseDocente | null
+    >(null);
+
+  // =====================================
+  // QR
+  // =====================================
+
+  const [
+    qrUrl,
+    setQrUrl,
+  ] =
+    useState<
+      string | null
+    >(null);
+
+  const [
+    estudianteQr,
+    setEstudianteQr,
+  ] =
+    useState<
+      EstudianteClase | Estudiante | null
+    >(null);
+
+  const [
+    modalQrAbierto,
+    setModalQrAbierto,
+  ] =
+    useState(false);
+
+  const [
+    cargandoQr,
+    setCargandoQr,
+  ] =
+    useState(false);
+
+  // =====================================
+  // ESTADOS
+  // =====================================
 
   const [
     cargando,
@@ -125,70 +272,65 @@ export default function EstudiantesDocente() {
     useState(true);
 
   const [
-    guardando,
-    setGuardando,
+    cargandoEstudiantes,
+    setCargandoEstudiantes,
   ] =
     useState(false);
 
   const [
-    seccionSeleccionada,
-    setSeccionSeleccionada,
+    guardando,
+    setGuardando,
   ] =
-    useState<
-      number | undefined
-    >(undefined);
-
-  const [
-    estudianteCreado,
-    setEstudianteCreado,
-  ] =
-    useState<Estudiante | null>(
-      null,
-    );
-
-  const [
-    claseRegistrada,
-    setClaseRegistrada,
-  ] =
-    useState<ClaseDocente | null>(
-      null,
-    );
-
-  const [
-    qrUrl,
-    setQrUrl,
-  ] =
-    useState<string | null>(
-      null,
-    );
+    useState(false);
 
   // =====================================
   // MENSAJE DE ERROR
   // =====================================
 
   const obtenerMensajeError = (
-    error: any,
-    predeterminado: string,
-  ) => {
-    const respuesta =
-      error.response
-        ?.data
-        ?.message;
+    error:
+      unknown,
 
+    predeterminado:
+      string,
+  ) => {
     if (
-      Array.isArray(
-        respuesta,
+      axios.isAxiosError(
+        error,
       )
     ) {
-      return respuesta.join(
-        ', ',
+      const respuesta =
+        error.response
+          ?.data
+          ?.message;
+
+      if (
+        Array.isArray(
+          respuesta,
+        )
+      ) {
+        return respuesta.join(
+          ', ',
+        );
+      }
+
+      return (
+        respuesta ??
+        predeterminado
       );
     }
 
-    return (
-      respuesta ??
-      predeterminado
-    );
+    if (
+      error instanceof
+      Error
+    ) {
+      return (
+        error.message ||
+        predeterminado
+      );
+    }
+
+    return predeterminado;
   };
 
   // =====================================
@@ -197,11 +339,14 @@ export default function EstudiantesDocente() {
 
   const obtenerNombreClase = (
     clase: {
-      grado: string;
+      grado:
+        string;
 
-      seccion: string;
+      seccion:
+        string;
 
-      anio_academico: number;
+      anio_academico:
+        number;
     },
   ) => {
     const mostrarSeccion =
@@ -211,12 +356,12 @@ export default function EstudiantesDocente() {
         'general';
 
     return mostrarSeccion
-      ? `${clase.grado} - Seccion ${clase.seccion} - ${clase.anio_academico}`
+      ? `${clase.grado} - Sección ${clase.seccion} - ${clase.anio_academico}`
       : `${clase.grado} - ${clase.anio_academico}`;
   };
 
   // =====================================
-  // CARGAR ASIGNACIONES DEL DOCENTE
+  // CARGAR ASIGNACIONES
   // =====================================
 
   const cargarAsignaciones =
@@ -231,12 +376,51 @@ export default function EstudiantesDocente() {
             '/asignaciones/mis-asignaciones',
           );
 
-        setAsignaciones(
+        const datos =
           respuesta.data
-            .datos ?? [],
+            .datos ?? [];
+
+        const normalizados:
+          Asignacion[] =
+          datos.map(
+            (
+              asignacion:
+                any,
+            ) => ({
+              ...asignacion,
+
+              asignacion_id:
+                Number(
+                  asignacion.asignacion_id,
+                ),
+
+              curso_id:
+                Number(
+                  asignacion.curso_id,
+                ),
+
+              seccion_id:
+                Number(
+                  asignacion.seccion_id,
+                ),
+
+              anio_academico:
+                Number(
+                  asignacion.anio_academico,
+                ),
+
+              activo:
+                Boolean(
+                  asignacion.activo,
+                ),
+            }),
+          );
+
+        setAsignaciones(
+          normalizados,
         );
       } catch (
-        error: any
+        error
       ) {
         message.error(
           obtenerMensajeError(
@@ -251,9 +435,13 @@ export default function EstudiantesDocente() {
       }
     };
 
+  // =====================================
+  // INICIO
+  // =====================================
+
   useEffect(
     () => {
-      cargarAsignaciones();
+      void cargarAsignaciones();
     },
     [],
   );
@@ -307,7 +495,9 @@ export default function EstudiantesDocente() {
                       item.seccion,
 
                     anio_academico:
-                      item.anio_academico,
+                      Number(
+                        item.anio_academico,
+                      ),
 
                     cursos:
                       [],
@@ -356,22 +546,160 @@ export default function EstudiantesDocente() {
       ],
     );
 
-  const claseSeleccionada =
-    clases.find(
-      (
-        item,
-      ) =>
-        Number(
-          item.id,
-        ) ===
-        Number(
-          seccionSeleccionada,
-        ),
+  // =====================================
+  // CLASE DE REGISTRO
+  // =====================================
+
+  const claseRegistro =
+    useMemo(
+      () =>
+        clases.find(
+          (
+            clase,
+          ) =>
+            Number(
+              clase.id,
+            ) ===
+              Number(
+                seccionRegistro,
+              ),
+        ) ??
+        null,
+      [
+        clases,
+        seccionRegistro,
+      ],
     );
 
   // =====================================
-  // LIBERAR URL DEL QR
+  // CLASE DE CONSULTA
   // =====================================
+
+  const claseConsulta =
+    useMemo(
+      () =>
+        clases.find(
+          (
+            clase,
+          ) =>
+            Number(
+              clase.id,
+            ) ===
+              Number(
+                seccionConsulta,
+              ),
+        ) ??
+        null,
+      [
+        clases,
+        seccionConsulta,
+      ],
+    );
+
+  // =====================================
+  // CARGAR ESTUDIANTES DE CLASE
+  // =====================================
+
+  const cargarEstudiantesClase =
+    async (
+      seccionId:
+        number,
+    ) => {
+      try {
+        setCargandoEstudiantes(
+          true,
+        );
+
+        setEstudiantesClase(
+          [],
+        );
+
+        const respuesta =
+          await api.get(
+            `/inscripciones/mi-seccion/${seccionId}`,
+          );
+
+        const datos =
+          respuesta.data
+            .datos ?? [];
+
+        const normalizados:
+          EstudianteClase[] =
+          datos.map(
+            (
+              estudiante:
+                any,
+            ) => ({
+              inscripcion_id:
+                Number(
+                  estudiante.inscripcion_id,
+                ),
+
+              estudiante_id:
+                Number(
+                  estudiante.estudiante_id,
+                ),
+
+              codigo_estudiante:
+                estudiante.codigo_estudiante,
+
+              nombres:
+                estudiante.nombres,
+
+              apellidos:
+                estudiante.apellidos,
+
+              activo:
+                Boolean(
+                  estudiante.activo,
+                ),
+
+              estudiante_activo:
+                Boolean(
+                  estudiante.estudiante_activo,
+                ),
+            }),
+          );
+
+        setEstudiantesClase(
+          normalizados,
+        );
+      } catch (
+        error
+      ) {
+        setEstudiantesClase(
+          [],
+        );
+
+        message.error(
+          obtenerMensajeError(
+            error,
+            'No fue posible cargar los estudiantes de la clase.',
+          ),
+        );
+      } finally {
+        setCargandoEstudiantes(
+          false,
+        );
+      }
+    };
+
+  // =====================================
+  // LIMPIAR URL QR
+  // =====================================
+
+  const liberarQr =
+    () => {
+      if (qrUrl) {
+        URL.revokeObjectURL(
+          qrUrl,
+        );
+
+        setQrUrl(
+          null,
+        );
+      }
+    };
 
   useEffect(
     () => {
@@ -389,29 +717,46 @@ export default function EstudiantesDocente() {
   );
 
   // =====================================
-  // OBTENER QR
+  // MOSTRAR QR
   // =====================================
 
-  const cargarQr =
+  const verQr =
     async (
-      estudianteId:
+      estudiante:
+        EstudianteClase | Estudiante,
+
+      seccionId:
         number,
     ) => {
       try {
+        setEstudianteQr(
+          estudiante,
+        );
+
+        setModalQrAbierto(
+          true,
+        );
+
+        setCargandoQr(
+          true,
+        );
+
+        liberarQr();
+
+        const estudianteId =
+          'estudiante_id' in
+          estudiante
+            ? estudiante.estudiante_id
+            : estudiante.id;
+
         const respuesta =
           await api.get(
-            `/estudiantes/${estudianteId}/qr`,
+            `/inscripciones/mi-seccion/${seccionId}/estudiante/${estudianteId}/qr`,
             {
               responseType:
                 'blob',
             },
           );
-
-        if (qrUrl) {
-          URL.revokeObjectURL(
-            qrUrl,
-          );
-        }
 
         const nuevaUrl =
           URL.createObjectURL(
@@ -422,15 +767,40 @@ export default function EstudiantesDocente() {
           nuevaUrl,
         );
       } catch (
-        error: any
+        error
       ) {
+        setModalQrAbierto(
+          false,
+        );
+
         message.error(
           obtenerMensajeError(
             error,
-            'El estudiante fue registrado, pero no fue posible generar el QR.',
+            'No fue posible obtener el QR del estudiante.',
           ),
         );
+      } finally {
+        setCargandoQr(
+          false,
+        );
       }
+    };
+
+  // =====================================
+  // CERRAR QR
+  // =====================================
+
+  const cerrarQr =
+    () => {
+      setModalQrAbierto(
+        false,
+      );
+
+      setEstudianteQr(
+        null,
+      );
+
+      liberarQr();
     };
 
   // =====================================
@@ -455,16 +825,6 @@ export default function EstudiantesDocente() {
           null,
         );
 
-        if (qrUrl) {
-          URL.revokeObjectURL(
-            qrUrl,
-          );
-
-          setQrUrl(
-            null,
-          );
-        }
-
         const clase =
           clases.find(
             (
@@ -480,7 +840,7 @@ export default function EstudiantesDocente() {
 
         if (!clase) {
           message.error(
-            'Seleccione una clase valida.',
+            'Seleccione una clase válida.',
           );
 
           return;
@@ -509,21 +869,29 @@ export default function EstudiantesDocente() {
 
         const estudiante:
           Estudiante =
-          respuestaEstudiante
-            .data
-            .datos;
+          {
+            ...respuestaEstudiante
+              .data
+              .datos,
+
+            id:
+              Number(
+                respuestaEstudiante
+                  .data
+                  .datos
+                  .id,
+              ),
+          };
 
         // =================================
-        // INSCRIBIR EN LA CLASE
+        // INSCRIBIR EN CLASE
         // =================================
 
         await api.post(
           '/inscripciones/mi-seccion',
           {
             estudiante_id:
-              Number(
-                estudiante.id,
-              ),
+              estudiante.id,
 
             seccion_id:
               Number(
@@ -540,13 +908,29 @@ export default function EstudiantesDocente() {
           clase,
         );
 
-        await cargarQr(
-          estudiante.id,
-        );
+        // =================================
+        // SI ESTA CONSULTANDO ESA
+        // MISMA CLASE, ACTUALIZAR LISTA
+        // =================================
+
+        if (
+          Number(
+            seccionConsulta,
+          ) ===
+          Number(
+            valores.seccion_id,
+          )
+        ) {
+          await cargarEstudiantesClase(
+            Number(
+              valores.seccion_id,
+            ),
+          );
+        }
 
         // =================================
-        // LIMPIAR DATOS DEL ALUMNO
-        // PERO CONSERVAR LA CLASE
+        // LIMPIAR DATOS
+        // CONSERVANDO CLASE
         // =================================
 
         form.resetFields(
@@ -561,7 +945,7 @@ export default function EstudiantesDocente() {
           'Estudiante registrado correctamente.',
         );
       } catch (
-        error: any
+        error
       ) {
         message.error(
           obtenerMensajeError(
@@ -577,25 +961,145 @@ export default function EstudiantesDocente() {
     };
 
   // =====================================
+  // COLUMNAS ESTUDIANTES
+  // =====================================
+
+  const columnas:
+    TableColumnsType<EstudianteClase> =
+    [
+      {
+        title:
+          'Carnet',
+
+        dataIndex:
+          'codigo_estudiante',
+
+        key:
+          'codigo_estudiante',
+
+        width:
+          170,
+
+        render: (
+          codigo:
+            string,
+        ) => (
+          <Space>
+            <IdcardOutlined />
+
+            <Text>
+              {codigo}
+            </Text>
+          </Space>
+        ),
+      },
+
+      {
+        title:
+          'Estudiante',
+
+        key:
+          'estudiante',
+
+        render: (
+          _,
+          estudiante,
+        ) => (
+          <div>
+            <Text strong>
+              {
+                estudiante.nombres
+              }{' '}
+              {
+                estudiante.apellidos
+              }
+            </Text>
+
+            <br />
+
+            <Text
+              type="secondary"
+              style={{
+                fontSize:
+                  12,
+              }}
+            >
+              Estudiante activo
+            </Text>
+          </div>
+        ),
+      },
+
+      {
+        title:
+          'Estado',
+
+        key:
+          'estado',
+
+        width:
+          120,
+
+        align:
+          'center',
+
+        render: () => (
+          <Tag
+            color="green"
+          >
+            ACTIVO
+          </Tag>
+        ),
+      },
+
+      {
+        title:
+          'Código QR',
+
+        key:
+          'qr',
+
+        width:
+          150,
+
+        align:
+          'center',
+
+        render: (
+          _,
+          estudiante,
+        ) => (
+          <Button
+            icon={
+              <QrcodeOutlined />
+            }
+            onClick={() => {
+              if (
+                !seccionConsulta
+              ) {
+                return;
+              }
+
+              void verQr(
+                estudiante,
+                seccionConsulta,
+              );
+            }}
+          >
+            Ver QR
+          </Button>
+        ),
+      },
+    ];
+
+  // =====================================
   // CARGANDO
   // =====================================
 
   if (cargando) {
     return (
       <div
-        style={{
-          minHeight:
-            '100vh',
-
-          display:
-            'flex',
-
-          alignItems:
-            'center',
-
-          justifyContent:
-            'center',
-        }}
+        className="pantalla-cargando"
       >
         <Spin
           size="large"
@@ -605,419 +1109,285 @@ export default function EstudiantesDocente() {
   }
 
   // =====================================
-  // VISTA
+  // TAB: MIS ESTUDIANTES
   // =====================================
 
-  return (
-    <div
-      style={{
-        maxWidth:
-          1000,
+  const contenidoMisEstudiantes =
+    (
+      <>
+        <Card>
+          <Text strong>
+            Clase
+          </Text>
 
-        margin:
-          '0 auto',
-
-        padding:
-          24,
-      }}
-    >
-      {/* ================================= */}
-      {/* REGRESAR */}
-      {/* ================================= */}
-
-      <Button
-        icon={
-          <ArrowLeftOutlined />
-        }
-        onClick={() =>
-          navigate(
-            '/docente',
-          )
-        }
-        style={{
-          marginBottom:
-            20,
-        }}
-      >
-        Regresar
-      </Button>
-
-      {/* ================================= */}
-      {/* TITULO */}
-      {/* ================================= */}
-
-      <Title level={2}>
-        Estudiantes
-      </Title>
-
-      <Text
-        type="secondary"
-      >
-        Registre un estudiante
-        y seleccione la clase a
-        la que pertenece.
-      </Text>
-
-      {/* ================================= */}
-      {/* FORMULARIO */}
-      {/* ================================= */}
-
-      <Card
-        title={
-          <Space>
-            <UserAddOutlined />
-
-            Registrar nuevo estudiante
-          </Space>
-        }
-        style={{
-          marginTop:
-            24,
-        }}
-      >
-        {clases.length ===
-        0 ? (
-          <Alert
-            type="warning"
-            showIcon
-            message="Primero debe crear una clase y agregarle al menos un curso."
-            description="Ingrese a Mis clases para realizar la configuracion."
-          />
-        ) : (
-          <Form
-            form={
-              form
+          <Select
+            size="large"
+            showSearch
+            optionFilterProp="label"
+            placeholder="Seleccione una de sus clases"
+            value={
+              seccionConsulta
             }
-            layout="vertical"
-            onFinish={
-              registrarEstudiante
-            }
-          >
-            {/* ========================= */}
-            {/* CLASE */}
-            {/* ========================= */}
+            style={{
+              width:
+                '100%',
 
-            <Form.Item
-              name="seccion_id"
-              label="¿A que clase pertenece?"
-              rules={[
-                {
-                  required:
-                    true,
+              marginTop:
+                8,
+            }}
+            options={
+              clases.map(
+                (
+                  clase,
+                ) => ({
+                  value:
+                    clase.id,
 
-                  message:
-                    'Seleccione la clase.',
-                },
-              ]}
-            >
-              <Select
-                size="large"
-                placeholder="Seleccione la clase"
-                onChange={(
-                  valor,
-                ) => {
-                  setSeccionSeleccionada(
-                    Number(
-                      valor,
-                    ),
-                  );
-                }}
-                options={
-                  clases.map(
-                    (
+                  label:
+                    obtenerNombreClase(
                       clase,
-                    ) => ({
-                      value:
-                        clase.id,
+                    ),
+                }),
+              )
+            }
+            onChange={(
+              valor,
+            ) => {
+              const id =
+                Number(
+                  valor,
+                );
 
-                      label:
-                        obtenerNombreClase(
-                          clase,
-                        ),
-                    }),
-                  )
-                }
-              />
-            </Form.Item>
+              setSeccionConsulta(
+                id,
+              );
 
-            {/* ========================= */}
-            {/* CURSOS DE LA CLASE */}
-            {/* ========================= */}
+              void cargarEstudiantesClase(
+                id,
+              );
+            }}
+          />
+        </Card>
 
-            {claseSeleccionada && (
-              <Alert
-                type="info"
-                showIcon
-                message="Cursos incluidos en esta clase"
-                description={
-                  <Space
-                    wrap
-                    style={{
-                      marginTop:
-                        8,
-                    }}
-                  >
-                    {claseSeleccionada
-                      .cursos
-                      .map(
-                        (
-                          curso,
-                        ) => (
-                          <Tag
-                            color="blue"
-                            key={
-                              curso.id
-                            }
-                          >
-                            {
-                              curso.nombre
-                            }
-                          </Tag>
-                        ),
-                      )}
-                  </Space>
-                }
+        {cargandoEstudiantes && (
+          <Card
+            style={{
+              marginTop:
+                20,
+            }}
+          >
+            <div
+              style={{
+                display:
+                  'flex',
+
+                justifyContent:
+                  'center',
+
+                padding:
+                  30,
+              }}
+            >
+              <Spin />
+            </div>
+          </Card>
+        )}
+
+        {!cargandoEstudiantes &&
+          seccionConsulta &&
+          estudiantesClase.length ===
+            0 && (
+            <Alert
+              type="info"
+              showIcon
+              message="Esta clase todavía no tiene estudiantes registrados."
+              style={{
+                marginTop:
+                  20,
+              }}
+            />
+          )}
+
+        {!cargandoEstudiantes &&
+          claseConsulta &&
+          estudiantesClase.length >
+            0 && (
+            <Card
+              style={{
+                marginTop:
+                  20,
+              }}
+            >
+              <div
                 style={{
                   marginBottom:
                     20,
                 }}
-              />
-            )}
-
-            {/* ========================= */}
-            {/* CARNET */}
-            {/* ========================= */}
-
-            <Form.Item
-              name="codigo_estudiante"
-              label="Carnet o codigo del estudiante"
-              extra="Ingrese el carnet que utiliza el estudiante en el establecimiento."
-              rules={[
-                {
-                  required:
-                    true,
-
-                  message:
-                    'Ingrese el carnet o codigo del estudiante.',
-                },
-
-                {
-                  whitespace:
-                    true,
-
-                  message:
-                    'Ingrese un carnet valido.',
-                },
-
-                {
-                  max:
-                    30,
-
-                  message:
-                    'El carnet no puede superar 30 caracteres.',
-                },
-              ]}
-            >
-              <Input
-                size="large"
-                prefix={
-                  <IdcardOutlined />
-                }
-                placeholder="Ejemplo: 2026-001"
-                maxLength={
-                  30
-                }
-              />
-            </Form.Item>
-
-            {/* ========================= */}
-            {/* NOMBRES Y APELLIDOS */}
-            {/* ========================= */}
-
-            <Row
-              gutter={[
-                16,
-                0,
-              ]}
-            >
-              <Col
-                xs={24}
-                md={12}
               >
-                <Form.Item
-                  name="nombres"
-                  label="Nombres"
-                  rules={[
-                    {
-                      required:
-                        true,
-
-                      message:
-                        'Ingrese los nombres.',
-                    },
-
-                    {
-                      whitespace:
-                        true,
-
-                      message:
-                        'Ingrese nombres validos.',
-                    },
-                  ]}
+                <Space
+                  align="center"
                 >
-                  <Input
-                    size="large"
-                    placeholder="Ejemplo: Juan Carlos"
-                    maxLength={
-                      100
-                    }
-                  />
-                </Form.Item>
-              </Col>
+                  <TeamOutlined />
 
-              <Col
-                xs={24}
-                md={12}
-              >
-                <Form.Item
-                  name="apellidos"
-                  label="Apellidos"
-                  rules={[
+                  <Title
+                    level={4}
+                    style={{
+                      margin:
+                        0,
+                    }}
+                  >
                     {
-                      required:
-                        true,
-
-                      message:
-                        'Ingrese los apellidos.',
-                    },
-
-                    {
-                      whitespace:
-                        true,
-
-                      message:
-                        'Ingrese apellidos validos.',
-                    },
-                  ]}
-                >
-                  <Input
-                    size="large"
-                    placeholder="Ejemplo: Perez Lopez"
-                    maxLength={
-                      100
+                      obtenerNombreClase(
+                        claseConsulta,
+                      )
                     }
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-
-            {/* ========================= */}
-            {/* REGISTRAR */}
-            {/* ========================= */}
-
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              icon={
-                <UserAddOutlined />
-              }
-              loading={
-                guardando
-              }
-            >
-              Registrar estudiante
-            </Button>
-          </Form>
-        )}
-      </Card>
-
-      {/* ================================= */}
-      {/* RESULTADO */}
-      {/* ================================= */}
-
-      {estudianteCreado &&
-        claseRegistrada && (
-          <Card
-            title="Estudiante registrado"
-            style={{
-              marginTop:
-                24,
-            }}
-          >
-            <Row
-              gutter={[
-                24,
-                24,
-              ]}
-            >
-              {/* ========================= */}
-              {/* INFORMACION */}
-              {/* ========================= */}
-
-              <Col
-                xs={24}
-                md={14}
-              >
-                <Alert
-                  type="success"
-                  showIcon
-                  message="Registro completado"
-                  description={
-                    `${estudianteCreado.nombres} ${estudianteCreado.apellidos}`
-                  }
-                />
+                  </Title>
+                </Space>
 
                 <div
                   style={{
                     marginTop:
-                      20,
+                      5,
                   }}
                 >
-                  <Text strong>
-                    Carnet / codigo:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      estudianteCreado.codigo_estudiante
-                    }
-                  </Text>
-
-                  <br />
-                  <br />
-
-                  <Text strong>
-                    Clase:
-                  </Text>
-
-                  <br />
-
-                  <Text>
-                    {
-                      obtenerNombreClase(
-                        claseRegistrada,
-                      )
-                    }
-                  </Text>
-
-                  <br />
-                  <br />
-
-                  <Text strong>
-                    Cursos:
-                  </Text>
-
-                  <div
-                    style={{
-                      marginTop:
-                        8,
-                    }}
+                  <Text
+                    type="secondary"
                   >
-                    <Space wrap>
-                      {claseRegistrada
+                    {
+                      estudiantesClase.length
+                    }{' '}
+                    {
+                      estudiantesClase.length ===
+                      1
+                        ? 'estudiante registrado'
+                        : 'estudiantes registrados'
+                    }
+                  </Text>
+                </div>
+              </div>
+
+              <Table
+                rowKey="estudiante_id"
+                columns={
+                  columnas
+                }
+                dataSource={
+                  estudiantesClase
+                }
+                pagination={
+                  estudiantesClase.length >
+                  10
+                    ? {
+                        pageSize:
+                          10,
+                      }
+                    : false
+                }
+                scroll={{
+                  x:
+                    700,
+                }}
+              />
+            </Card>
+          )}
+      </>
+    );
+
+  // =====================================
+  // TAB: REGISTRAR
+  // =====================================
+
+  const contenidoRegistrar =
+    (
+      <>
+        <Card
+          title={
+            <Space>
+              <UserAddOutlined />
+
+              Registrar nuevo estudiante
+            </Space>
+          }
+        >
+          {clases.length ===
+          0 ? (
+            <Alert
+              type="warning"
+              showIcon
+              message="No tiene clases asignadas."
+              description="El administrador debe asignarle una clase antes de registrar estudiantes."
+            />
+          ) : (
+            <Form
+              form={
+                form
+              }
+              layout="vertical"
+              onFinish={
+                registrarEstudiante
+              }
+            >
+              {/* CLASE */}
+
+              <Form.Item
+                name="seccion_id"
+                label="¿A qué clase pertenece?"
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Seleccione la clase.',
+                  },
+                ]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Seleccione la clase"
+                  onChange={(
+                    valor,
+                  ) => {
+                    setSeccionRegistro(
+                      Number(
+                        valor,
+                      ),
+                    );
+                  }}
+                  options={
+                    clases.map(
+                      (
+                        clase,
+                      ) => ({
+                        value:
+                          clase.id,
+
+                        label:
+                          obtenerNombreClase(
+                            clase,
+                          ),
+                      }),
+                    )
+                  }
+                />
+              </Form.Item>
+
+              {/* CURSOS */}
+
+              {claseRegistro && (
+                <Alert
+                  type="info"
+                  showIcon
+                  message="Cursos incluidos en esta clase"
+                  description={
+                    <Space
+                      wrap
+                      style={{
+                        marginTop:
+                          8,
+                      }}
+                    >
+                      {claseRegistro
                         .cursos
                         .map(
                           (
@@ -1036,79 +1406,416 @@ export default function EstudiantesDocente() {
                           ),
                         )}
                     </Space>
-                  </div>
+                  }
+                  style={{
+                    marginBottom:
+                      20,
+                  }}
+                />
+              )}
 
-                  <br />
+              {/* CARNET */}
+
+              <Form.Item
+                name="codigo_estudiante"
+                label="Carnet o código del estudiante"
+                extra="Ingrese el carnet que utiliza el estudiante en el establecimiento."
+                rules={[
+                  {
+                    required:
+                      true,
+
+                    message:
+                      'Ingrese el carnet o código del estudiante.',
+                  },
+
+                  {
+                    whitespace:
+                      true,
+
+                    message:
+                      'Ingrese un carnet válido.',
+                  },
+
+                  {
+                    max:
+                      30,
+
+                    message:
+                      'El carnet no puede superar 30 caracteres.',
+                  },
+                ]}
+              >
+                <Input
+                  size="large"
+                  prefix={
+                    <IdcardOutlined />
+                  }
+                  placeholder="Ejemplo: 2026-001"
+                  maxLength={
+                    30
+                  }
+                />
+              </Form.Item>
+
+              {/* NOMBRES */}
+
+              <Row
+                gutter={[
+                  16,
+                  0,
+                ]}
+              >
+                <Col
+                  xs={24}
+                  md={12}
+                >
+                  <Form.Item
+                    name="nombres"
+                    label="Nombres"
+                    rules={[
+                      {
+                        required:
+                          true,
+
+                        message:
+                          'Ingrese los nombres.',
+                      },
+
+                      {
+                        whitespace:
+                          true,
+
+                        message:
+                          'Ingrese nombres válidos.',
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      placeholder="Ejemplo: Juan Carlos"
+                      maxLength={
+                        100
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+
+                <Col
+                  xs={24}
+                  md={12}
+                >
+                  <Form.Item
+                    name="apellidos"
+                    label="Apellidos"
+                    rules={[
+                      {
+                        required:
+                          true,
+
+                        message:
+                          'Ingrese los apellidos.',
+                      },
+
+                      {
+                        whitespace:
+                          true,
+
+                        message:
+                          'Ingrese apellidos válidos.',
+                      },
+                    ]}
+                  >
+                    <Input
+                      size="large"
+                      placeholder="Ejemplo: Pérez López"
+                      maxLength={
+                        100
+                      }
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                size="large"
+                icon={
+                  <UserAddOutlined />
+                }
+                loading={
+                  guardando
+                }
+              >
+                Registrar estudiante
+              </Button>
+            </Form>
+          )}
+        </Card>
+
+        {/* ESTUDIANTE RECIEN REGISTRADO */}
+
+        {estudianteCreado &&
+          claseRegistrada && (
+            <Alert
+              type="success"
+              showIcon
+              message="Estudiante registrado correctamente"
+              description={
+                <div>
+                  <Text>
+                    {
+                      estudianteCreado.nombres
+                    }{' '}
+                    {
+                      estudianteCreado.apellidos
+                    }
+                    {' · '}
+                    {
+                      estudianteCreado.codigo_estudiante
+                    }
+                  </Text>
+
+                  <div
+                    style={{
+                      marginTop:
+                        12,
+                    }}
+                  >
+                    <Button
+                      icon={
+                        <QrcodeOutlined />
+                      }
+                      onClick={() => {
+                        void verQr(
+                          estudianteCreado,
+                          claseRegistrada.id,
+                        );
+                      }}
+                    >
+                      Ver QR del estudiante
+                    </Button>
+                  </div>
+                </div>
+              }
+              style={{
+                marginTop:
+                  20,
+              }}
+            />
+          )}
+      </>
+    );
+
+  // =====================================
+  // VISTA PRINCIPAL
+  // =====================================
+
+  return (
+    <div
+      className="pagina-administracion"
+    >
+      <div>
+        {/* REGRESAR */}
+
+        <Button
+          type="text"
+          icon={
+            <ArrowLeftOutlined />
+          }
+          className="boton-regresar"
+          onClick={() =>
+            navigate(
+              '/docente',
+            )
+          }
+        >
+          Regresar
+        </Button>
+
+        {/* ENCABEZADO */}
+
+        <div
+          style={{
+            marginBottom:
+              22,
+          }}
+        >
+          <Title
+            level={2}
+            style={{
+              marginBottom:
+                4,
+            }}
+          >
+            Estudiantes
+          </Title>
+
+          <Text
+            type="secondary"
+          >
+            Consulte los estudiantes de
+            sus clases o registre un
+            estudiante nuevo.
+          </Text>
+        </div>
+
+        {/* PESTAÑAS */}
+
+        <Card>
+          <Tabs
+            defaultActiveKey="mis-estudiantes"
+            items={[
+              {
+                key:
+                  'mis-estudiantes',
+
+                label: (
+                  <Space>
+                    <TeamOutlined />
+
+                    Mis estudiantes
+                  </Space>
+                ),
+
+                children:
+                  contenidoMisEstudiantes,
+              },
+
+              {
+                key:
+                  'registrar',
+
+                label: (
+                  <Space>
+                    <UserAddOutlined />
+
+                    Registrar estudiante
+                  </Space>
+                ),
+
+                children:
+                  contenidoRegistrar,
+              },
+            ]}
+          />
+        </Card>
+
+        {/* ================================= */}
+        {/* MODAL QR */}
+        {/* ================================= */}
+
+        <Modal
+          title="Código QR del estudiante"
+          open={
+            modalQrAbierto
+          }
+          onCancel={
+            cerrarQr
+          }
+          footer={[
+            <Button
+              key="cerrar"
+              onClick={
+                cerrarQr
+              }
+            >
+              Cerrar
+            </Button>,
+          ]}
+          width={
+            460
+          }
+        >
+          {cargandoQr ? (
+            <div
+              style={{
+                display:
+                  'flex',
+
+                justifyContent:
+                  'center',
+
+                padding:
+                  50,
+              }}
+            >
+              <Spin />
+            </div>
+          ) : (
+            <div
+              style={{
+                textAlign:
+                  'center',
+
+                padding:
+                  '10px 0',
+              }}
+            >
+              {estudianteQr && (
+                <>
+                  <Title
+                    level={4}
+                    style={{
+                      marginBottom:
+                        4,
+                    }}
+                  >
+                    {
+                      estudianteQr.nombres
+                    }{' '}
+                    {
+                      estudianteQr.apellidos
+                    }
+                  </Title>
 
                   <Text
                     type="secondary"
                   >
-                    El estudiante
-                    queda inscrito
-                    automaticamente
-                    en todos los
-                    cursos asociados
-                    a esta clase.
+                    {
+                      estudianteQr.codigo_estudiante
+                    }
                   </Text>
+                </>
+              )}
+
+              {qrUrl && (
+                <div
+                  style={{
+                    marginTop:
+                      20,
+                  }}
+                >
+                  <Image
+                    src={
+                      qrUrl
+                    }
+                    width={
+                      280
+                    }
+                    preview
+                  />
                 </div>
-              </Col>
+              )}
 
-              {/* ========================= */}
-              {/* QR */}
-              {/* ========================= */}
-
-              <Col
-                xs={24}
-                md={10}
+              <Alert
+                type="info"
+                showIcon
+                message="QR de asistencia"
+                description="Este código identifica al estudiante durante el registro de asistencia."
                 style={{
+                  marginTop:
+                    20,
+
                   textAlign:
-                    'center',
+                    'left',
                 }}
-              >
-                {qrUrl ? (
-                  <>
-                    <Space>
-                      <QrcodeOutlined />
-
-                      <Text strong>
-                        QR del estudiante
-                      </Text>
-                    </Space>
-
-                    <div
-                      style={{
-                        marginTop:
-                          15,
-                      }}
-                    >
-                      <Image
-                        src={
-                          qrUrl
-                        }
-                        width={
-                          220
-                        }
-                        preview
-                      />
-                    </div>
-
-                    <Text
-                      type="secondary"
-                    >
-                      Este QR se
-                      utilizara para
-                      registrar la
-                      asistencia del
-                      estudiante.
-                    </Text>
-                  </>
-                ) : (
-                  <Spin />
-                )}
-              </Col>
-            </Row>
-          </Card>
-        )}
+              />
+            </div>
+          )}
+        </Modal>
+      </div>
     </div>
   );
 }

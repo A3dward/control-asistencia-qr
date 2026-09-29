@@ -237,8 +237,14 @@ export default function HistorialAsistencias() {
     >(undefined);
 
   const [
-    fecha,
-    setFecha,
+    fechaDesde,
+    setFechaDesde,
+  ] =
+    useState('');
+
+  const [
+    fechaHasta,
+    setFechaHasta,
   ] =
     useState('');
 
@@ -683,10 +689,31 @@ export default function HistorialAsistencias() {
       }
 
       if (
-        !fecha
+        !fechaDesde
       ) {
         message.warning(
-          'Seleccione una fecha.',
+          'Seleccione la fecha inicial.',
+        );
+
+        return;
+      }
+
+      if (
+        !fechaHasta
+      ) {
+        message.warning(
+          'Seleccione la fecha final.',
+        );
+
+        return;
+      }
+
+      if (
+        fechaDesde >
+        fechaHasta
+      ) {
+        message.warning(
+          'La fecha inicial no puede ser mayor que la fecha final.',
         );
 
         return;
@@ -719,7 +746,7 @@ export default function HistorialAsistencias() {
             .datos ?? [];
 
         // =================================
-        // FILTRAR SOLAMENTE POR FECHA
+        // FILTRAR POR RANGO DE FECHAS
         //
         // NO SE FILTRA POR ESTADO.
         // ABIERTA, CERRADA O CANCELADA
@@ -731,11 +758,19 @@ export default function HistorialAsistencias() {
             (
               sesion:
                 any,
-            ) =>
-              obtenerFechaSimple(
-                sesion.fecha_sesion,
-              ) ===
-                fecha,
+            ) => {
+              const fechaSesion =
+                obtenerFechaSimple(
+                  sesion.fecha_sesion,
+                );
+
+              return (
+                fechaSesion >=
+                  fechaDesde &&
+                fechaSesion <=
+                  fechaHasta
+              );
+            },
           );
 
         const base:
@@ -944,7 +979,11 @@ export default function HistorialAsistencias() {
         undefined,
       );
 
-      setFecha(
+      setFechaDesde(
+        '',
+      );
+
+      setFechaHasta(
         '',
       );
 
@@ -1384,6 +1423,22 @@ export default function HistorialAsistencias() {
     ];
 
   // =====================================
+  // TEXTO DEL PERIODO
+  // =====================================
+
+  const textoPeriodo =
+    fechaDesde ===
+    fechaHasta
+      ? formatearFecha(
+          fechaDesde,
+        )
+      : `${formatearFecha(
+          fechaDesde,
+        )} al ${formatearFecha(
+          fechaHasta,
+        )}`;
+
+  // =====================================
   // VISTA
   // =====================================
 
@@ -1435,7 +1490,7 @@ export default function HistorialAsistencias() {
             type="secondary"
           >
             Seleccione una clase,
-            un curso y la fecha que
+            un curso y el período que
             desea consultar.
           </Text>
         </div>
@@ -1456,7 +1511,7 @@ export default function HistorialAsistencias() {
 
             <Col
               xs={24}
-              md={6}
+              lg={5}
             >
               <Text strong>
                 Clase
@@ -1519,7 +1574,7 @@ export default function HistorialAsistencias() {
 
             <Col
               xs={24}
-              md={6}
+              lg={5}
             >
               <Text strong>
                 Curso
@@ -1569,14 +1624,15 @@ export default function HistorialAsistencias() {
               />
             </Col>
 
-            {/* FECHA */}
+            {/* DESDE */}
 
             <Col
               xs={24}
-              md={6}
+              sm={12}
+              lg={4}
             >
               <Text strong>
-                Fecha
+                Desde
               </Text>
 
               <Input
@@ -1585,7 +1641,7 @@ export default function HistorialAsistencias() {
                   <CalendarOutlined />
                 }
                 value={
-                  fecha
+                  fechaDesde
                 }
                 style={{
                   marginTop:
@@ -1594,7 +1650,42 @@ export default function HistorialAsistencias() {
                 onChange={(
                   evento,
                 ) => {
-                  setFecha(
+                  setFechaDesde(
+                    evento.target.value,
+                  );
+
+                  limpiarResultado();
+                }}
+              />
+            </Col>
+
+            {/* HASTA */}
+
+            <Col
+              xs={24}
+              sm={12}
+              lg={4}
+            >
+              <Text strong>
+                Hasta
+              </Text>
+
+              <Input
+                type="date"
+                prefix={
+                  <CalendarOutlined />
+                }
+                value={
+                  fechaHasta
+                }
+                style={{
+                  marginTop:
+                    7,
+                }}
+                onChange={(
+                  evento,
+                ) => {
+                  setFechaHasta(
                     evento.target.value,
                   );
 
@@ -1607,7 +1698,7 @@ export default function HistorialAsistencias() {
 
             <Col
               xs={24}
-              md={6}
+              lg={6}
             >
               <Space>
                 <Button
@@ -1647,7 +1738,7 @@ export default function HistorialAsistencias() {
             <Alert
               type="info"
               showIcon
-              message="No se encontraron asistencias para la clase, curso y fecha seleccionados."
+              message="No se encontraron asistencias para la clase, curso y período seleccionados."
               style={{
                 marginTop:
                   20,
@@ -1699,9 +1790,7 @@ export default function HistorialAsistencias() {
                   }
                   {' · '}
                   {
-                    formatearFecha(
-                      fecha,
-                    )
+                    textoPeriodo
                   }
                   {' · '}
                   {

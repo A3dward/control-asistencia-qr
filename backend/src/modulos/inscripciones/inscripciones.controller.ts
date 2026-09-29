@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Req,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 
@@ -22,6 +23,10 @@ import {
 import {
   AsignacionesService,
 } from '../asignaciones/asignaciones.service';
+
+import {
+  EstudiantesService,
+} from '../estudiantes/estudiantes.service';
 
 import {
   AutenticacionGuard,
@@ -51,10 +56,13 @@ export class InscripcionesController {
 
     private readonly asignacionesService:
       AsignacionesService,
+
+    private readonly estudiantesService:
+      EstudiantesService,
   ) {}
 
   // =====================================
-  // VALIDAR DOCENTE
+  // OBTENER DOCENTE
   // =====================================
 
   private obtenerDocenteId(
@@ -81,8 +89,7 @@ export class InscripcionesController {
   }
 
   // =====================================
-  // VALIDAR QUE LA CLASE
-  // PERTENEZCA AL DOCENTE
+  // VALIDAR CLASE DEL DOCENTE
   // =====================================
 
   private async validarSeccionDocente(
@@ -118,7 +125,7 @@ export class InscripcionesController {
       !tieneLaSeccion
     ) {
       throw new ForbiddenException(
-        'No tiene permiso para utilizar esta seccion.',
+        'No tiene permiso para utilizar esta clase.',
       );
     }
   }
@@ -160,7 +167,7 @@ export class InscripcionesController {
 
     return {
       mensaje:
-        'Estudiante registrado en su seccion correctamente',
+        'Estudiante registrado en su clase correctamente',
 
       datos:
         inscripcion,
@@ -232,6 +239,108 @@ export class InscripcionesController {
   }
 
   // =====================================
+  // DOCENTE
+  // QR DE ESTUDIANTE DE MI CLASE
+  // =====================================
+
+  @Get(
+    'mi-seccion/:seccionId/estudiante/:estudianteId/qr',
+  )
+  @Roles('DOCENTE')
+  async obtenerQrMiSeccion(
+    @Req()
+    request: {
+      usuario:
+        UsuarioAutenticado;
+    },
+
+    @Param(
+      'seccionId',
+      ParseIntPipe,
+    )
+    seccionId:
+      number,
+
+    @Param(
+      'estudianteId',
+      ParseIntPipe,
+    )
+    estudianteId:
+      number,
+  ) {
+    const docenteId =
+      this.obtenerDocenteId(
+        request.usuario,
+      );
+
+    // =================================
+    // VALIDAR QUE LA CLASE
+    // SEA DEL DOCENTE
+    // =================================
+
+    await this.validarSeccionDocente(
+      docenteId,
+      seccionId,
+    );
+
+    // =================================
+    // VALIDAR QUE EL ESTUDIANTE
+    // PERTENEZCA A ESA CLASE
+    // =================================
+
+    const estudiantes =
+      await this.inscripcionesService.obtenerPorSeccion(
+        seccionId,
+      );
+
+    const pertenece =
+      estudiantes.some(
+        (
+          estudiante:
+            any,
+        ) =>
+          Number(
+            estudiante.estudiante_id,
+          ) ===
+            Number(
+              estudianteId,
+            ) &&
+          Boolean(
+            estudiante.activo,
+          ) &&
+          Boolean(
+            estudiante.estudiante_activo,
+          ),
+      );
+
+    if (!pertenece) {
+      throw new ForbiddenException(
+        'El estudiante no pertenece a una de sus clases activas.',
+      );
+    }
+
+    // =================================
+    // GENERAR QR
+    // =================================
+
+    const qr =
+      await this.estudiantesService.generarQr(
+        estudianteId,
+      );
+
+    return new StreamableFile(
+      qr,
+      {
+        type:
+          'image/png',
+
+        disposition:
+          `inline; filename="qr-estudiante-${estudianteId}.png"`,
+      },
+    );
+  }
+
+  // =====================================
   // ADMIN
   // TODAS LAS INSCRIPCIONES
   // =====================================
@@ -273,7 +382,7 @@ export class InscripcionesController {
 
     return {
       mensaje:
-        'Estudiante asignado a la seccion correctamente',
+        'Estudiante asignado a la clase correctamente',
 
       datos:
         inscripcion,
@@ -282,7 +391,7 @@ export class InscripcionesController {
 
   // =====================================
   // ADMIN
-  // ESTUDIANTES DE UNA CLASE
+  // ESTUDIANTES DE CLASE
   // =====================================
 
   @Get(
@@ -304,7 +413,7 @@ export class InscripcionesController {
 
     return {
       mensaje:
-        'Estudiantes de la seccion obtenidos correctamente',
+        'Estudiantes de la clase obtenidos correctamente',
 
       total:
         estudiantes.length,
@@ -316,7 +425,7 @@ export class InscripcionesController {
 
   // =====================================
   // ADMIN
-  // INSCRIPCIONES ESTUDIANTE
+  // INSCRIPCIONES DEL ESTUDIANTE
   // =====================================
 
   @Get(
@@ -350,7 +459,7 @@ export class InscripcionesController {
 
   // =====================================
   // ADMIN
-  // POR ID
+  // INSCRIPCION POR ID
   // =====================================
 
   @Get(':id')
