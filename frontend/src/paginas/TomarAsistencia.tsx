@@ -1,12 +1,9 @@
 import {
   ArrowLeftOutlined,
   CameraOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
   QrcodeOutlined,
   ReloadOutlined,
   StopOutlined,
-  UserOutlined,
 } from '@ant-design/icons';
 
 import {
@@ -20,9 +17,7 @@ import {
   Select,
   Space,
   Spin,
-  Statistic,
   Table,
-  Tag,
   Typography,
 } from 'antd';
 
@@ -338,7 +333,7 @@ export default function TomarAsistencia() {
     });
 
   // =====================================
-  // SINCRONIZAR REF DE SESION
+  // SINCRONIZAR SESION
   // =====================================
 
   useEffect(
@@ -402,7 +397,7 @@ export default function TomarAsistencia() {
   };
 
   // =====================================
-  // NOMBRE CLASE
+  // NOMBRE DE CLASE
   // =====================================
 
   const obtenerNombreClase = (
@@ -424,12 +419,12 @@ export default function TomarAsistencia() {
         'general';
 
     return mostrarSeccion
-      ? `${clase.grado} - Seccion ${clase.seccion} - ${clase.anio_academico}`
+      ? `${clase.grado} - Sección ${clase.seccion} - ${clase.anio_academico}`
       : `${clase.grado} - ${clase.anio_academico}`;
   };
 
   // =====================================
-  // CLASES UNICAS
+  // CLASES
   // =====================================
 
   const clases =
@@ -489,7 +484,7 @@ export default function TomarAsistencia() {
     );
 
   // =====================================
-  // CURSOS DE CLASE
+  // CURSOS DE LA CLASE
   // =====================================
 
   const cursosDeClase =
@@ -574,7 +569,7 @@ export default function TomarAsistencia() {
     );
 
   // =====================================
-  // FILAS ESTUDIANTES
+  // ESTUDIANTES + ESTADO
   // =====================================
 
   const filasEstudiantes:
@@ -624,38 +619,46 @@ export default function TomarAsistencia() {
     );
 
   // =====================================
-  // CONTADORES
+  // SOLO AUSENTES
   // =====================================
 
-  const presentes =
-    filasEstudiantes.filter(
-      (
-        estudiante,
-      ) =>
-        estudiante.estado ===
-        'PRESENTE',
-    ).length;
+  const estudiantesAusentes =
+    useMemo(
+      () =>
+        filasEstudiantes.filter(
+          (
+            estudiante,
+          ) =>
+            estudiante.estado ===
+            'AUSENTE',
+        ),
+      [
+        filasEstudiantes,
+      ],
+    );
 
-  const ausentes =
-    filasEstudiantes.filter(
-      (
-        estudiante,
-      ) =>
-        estudiante.estado ===
-        'AUSENTE',
-    ).length;
+  // =====================================
+  // PENDIENTES
+  //
+  // SOLO SE USA INTERNAMENTE PARA
+  // CONFIRMAR EL CIERRE.
+  // NO SE MUESTRA COMO ESTADISTICA.
+  // =====================================
 
   const pendientes =
-    filasEstudiantes.filter(
-      (
-        estudiante,
-      ) =>
-        estudiante.estado ===
-        'PENDIENTE',
-    ).length;
-
-  const totalEstudiantes =
-    filasEstudiantes.length;
+    useMemo(
+      () =>
+        filasEstudiantes.filter(
+          (
+            estudiante,
+          ) =>
+            estudiante.estado ===
+            'PENDIENTE',
+        ).length,
+      [
+        filasEstudiantes,
+      ],
+    );
 
   // =====================================
   // CARGAR ASIGNACIONES
@@ -733,7 +736,7 @@ export default function TomarAsistencia() {
     };
 
   // =====================================
-  // ESTUDIANTES DE LA CLASE
+  // CARGAR ESTUDIANTES
   // =====================================
 
   const cargarEstudiantesClase =
@@ -810,7 +813,7 @@ export default function TomarAsistencia() {
     };
 
   // =====================================
-  // ASISTENCIAS DE SESION
+  // CARGAR ASISTENCIAS DE SESION
   // =====================================
 
   const cargarAsistencias =
@@ -904,7 +907,7 @@ export default function TomarAsistencia() {
           await scanner.stop();
         }
       } catch {
-        // La camara puede estar
+        // Puede encontrarse
         // detenida previamente.
       }
 
@@ -955,9 +958,8 @@ export default function TomarAsistencia() {
         Date.now();
 
       // =================================
-      // EVITAR QUE LA CAMARA LEA
-      // EL MISMO QR MUCHAS VECES
-      // EN MILISEGUNDOS
+      // EVITAR LECTURAS REPETIDAS
+      // DEL MISMO QR
       // =================================
 
       if (
@@ -1081,7 +1083,7 @@ export default function TomarAsistencia() {
         );
 
         message.success(
-          `${nombre} registrado como PRESENTE`,
+          `${nombre} registrado`,
           1.5,
         );
       } catch (
@@ -1190,8 +1192,8 @@ export default function TomarAsistencia() {
             );
           },
           () => {
-            // Los intentos sin QR
-            // son normales.
+            // Es normal que existan
+            // intentos sin detectar QR.
           },
         );
 
@@ -1223,14 +1225,14 @@ export default function TomarAsistencia() {
         setCamaraError(
           obtenerMensajeError(
             error,
-            'No fue posible abrir la camara. Verifique que el navegador tenga permiso para utilizarla.',
+            'No fue posible abrir la cámara. Verifique que el navegador tenga permiso para utilizarla.',
           ),
         );
       }
     };
 
   // =====================================
-  // ARRANCAR CAMARA AL ABRIR SESION
+  // ABRIR CAMARA AL ABRIR SESION
   // =====================================
 
   useEffect(
@@ -1272,9 +1274,7 @@ export default function TomarAsistencia() {
         const scanner =
           scannerRef.current;
 
-        if (
-          !scanner
-        ) {
+        if (!scanner) {
           return;
         }
 
@@ -1310,6 +1310,8 @@ export default function TomarAsistencia() {
       valor:
         number,
     ) => {
+      await detenerCamara();
+
       setSeccionId(
         Number(
           valor,
@@ -1419,9 +1421,17 @@ export default function TomarAsistencia() {
           null,
         );
 
+        ultimoQrRef.current =
+          {
+            codigo:
+              '',
+
+            momento:
+              0,
+          };
+
         // =================================
-        // VERIFICAR SI YA HAY UNA
-        // SESION ABIERTA
+        // VERIFICAR SESION ABIERTA
         // =================================
 
         const respuestaSesiones =
@@ -1448,9 +1458,7 @@ export default function TomarAsistencia() {
         // CONTINUAR SESION EXISTENTE
         // =================================
 
-        if (
-          abierta
-        ) {
+        if (abierta) {
           const existente:
             SesionClase =
             {
@@ -1471,12 +1479,18 @@ export default function TomarAsistencia() {
             existente,
           );
 
+          // Se cargan internamente los
+          // registros para mantener
+          // correctamente la sesion,
+          // pero no se muestran como
+          // listado en pantalla.
+
           await cargarAsistencias(
             existente.id,
           );
 
           message.info(
-            'Ya existia una asistencia abierta para este curso. Se continuara con la misma.',
+            'Ya existe una asistencia abierta para este curso. Se continuará con la misma.',
           );
 
           return;
@@ -1549,9 +1563,7 @@ export default function TomarAsistencia() {
       const sesion =
         sesionActivaRef.current;
 
-      if (
-        !sesion
-      ) {
+      if (!sesion) {
         return;
       }
 
@@ -1591,6 +1603,11 @@ export default function TomarAsistencia() {
           cerrada,
         );
 
+        // =================================
+        // CARGAR RESULTADO FINAL
+        // PARA CONOCER AUSENTES
+        // =================================
+
         await cargarAsistencias(
           cerrada.id,
         );
@@ -1615,7 +1632,7 @@ export default function TomarAsistencia() {
     };
 
   // =====================================
-  // CANCELAR
+  // CANCELAR ASISTENCIA
   // =====================================
 
   const cancelarAsistencia =
@@ -1623,9 +1640,7 @@ export default function TomarAsistencia() {
       const sesion =
         sesionActivaRef.current;
 
-      if (
-        !sesion
-      ) {
+      if (!sesion) {
         return;
       }
 
@@ -1652,8 +1667,17 @@ export default function TomarAsistencia() {
           null,
         );
 
+        ultimoQrRef.current =
+          {
+            codigo:
+              '',
+
+            momento:
+              0,
+          };
+
         message.success(
-          'Sesion cancelada correctamente.',
+          'Sesión cancelada correctamente.',
         );
       } catch (
         error
@@ -1661,24 +1685,36 @@ export default function TomarAsistencia() {
         message.error(
           obtenerMensajeError(
             error,
-            'No fue posible cancelar la sesion.',
+            'No fue posible cancelar la sesión.',
           ),
         );
       }
     };
 
   // =====================================
-  // OTRA ASISTENCIA
+  // TOMAR OTRA ASISTENCIA
+  //
+  // LIMPIAMOS ABSOLUTAMENTE TODO
+  // LO RELACIONADO CON LA SESION
+  // ANTERIOR.
   // =====================================
 
   const tomarOtraAsistencia =
     () => {
+      setSeccionId(
+        undefined,
+      );
+
       setAsignacionId(
         undefined,
       );
 
       setSesionActiva(
         null,
+      );
+
+      setEstudiantes(
+        [],
       );
 
       setAsistencias(
@@ -1692,45 +1728,37 @@ export default function TomarAsistencia() {
       setCamaraError(
         null,
       );
-    };
 
-  // =====================================
-  // FORMATO HORA
-  // =====================================
-
-  const formatoHora =
-    (
-      fecha:
-        string | null,
-    ) => {
-      if (
-        !fecha
-      ) {
-        return '-';
-      }
-
-      return new Date(
-        fecha,
-      ).toLocaleTimeString(
-        'es-GT',
-        {
-          hour:
-            '2-digit',
-
-          minute:
-            '2-digit',
-
-          second:
-            '2-digit',
-        },
+      setCamaraLista(
+        false,
       );
+
+      ultimoQrRef.current =
+        {
+          codigo:
+            '',
+
+          momento:
+            0,
+        };
+
+      procesandoQrRef.current =
+        false;
+
+      window.scrollTo({
+        top:
+          0,
+
+        behavior:
+          'smooth',
+      });
     };
 
   // =====================================
-  // COLUMNAS
+  // COLUMNAS DE AUSENTES
   // =====================================
 
-  const columnas:
+  const columnasAusentes:
     TableColumnsType<FilaEstudiante> =
     [
       {
@@ -1744,7 +1772,7 @@ export default function TomarAsistencia() {
           'codigo_estudiante',
 
         width:
-          140,
+          180,
       },
 
       {
@@ -1760,102 +1788,16 @@ export default function TomarAsistencia() {
         ) =>
           `${estudiante.nombres} ${estudiante.apellidos}`,
       },
-
-      {
-        title:
-          'Estado',
-
-        dataIndex:
-          'estado',
-
-        key:
-          'estado',
-
-        width:
-          140,
-
-        render: (
-          estado:
-            string,
-        ) => {
-          if (
-            estado ===
-            'PRESENTE'
-          ) {
-            return (
-              <Tag
-                color="green"
-              >
-                PRESENTE
-              </Tag>
-            );
-          }
-
-          if (
-            estado ===
-            'AUSENTE'
-          ) {
-            return (
-              <Tag
-                color="red"
-              >
-                AUSENTE
-              </Tag>
-            );
-          }
-
-          return (
-            <Tag
-              color="orange"
-            >
-              PENDIENTE
-            </Tag>
-          );
-        },
-      },
-
-      {
-        title:
-          'Hora',
-
-        key:
-          'hora',
-
-        width:
-          140,
-
-        render: (
-          _,
-          estudiante,
-        ) =>
-          formatoHora(
-            estudiante.fecha_hora_asistencia,
-          ),
-      },
     ];
 
   // =====================================
   // CARGANDO
   // =====================================
 
-  if (
-    cargando
-  ) {
+  if (cargando) {
     return (
       <div
-        style={{
-          minHeight:
-            '100vh',
-
-          display:
-            'flex',
-
-          justifyContent:
-            'center',
-
-          alignItems:
-            'center',
-        }}
+        className="pantalla-cargando"
       >
         <Spin
           size="large"
@@ -1872,7 +1814,7 @@ export default function TomarAsistencia() {
     <div
       style={{
         maxWidth:
-          1200,
+          1100,
 
         margin:
           '0 auto',
@@ -1882,10 +1824,11 @@ export default function TomarAsistencia() {
       }}
     >
       {/* ================================= */}
-      {/* ENCABEZADO */}
+      {/* REGRESAR */}
       {/* ================================= */}
 
       <Button
+        type="text"
         icon={
           <ArrowLeftOutlined />
         }
@@ -1899,51 +1842,48 @@ export default function TomarAsistencia() {
             '/docente',
           )
         }
-        style={{
-          marginBottom:
-            20,
-        }}
+        className="boton-regresar"
       >
         Regresar
       </Button>
 
-      <Title
-        level={2}
+      {/* ================================= */}
+      {/* ENCABEZADO */}
+      {/* ================================= */}
+
+      <div
         style={{
           marginBottom:
-            4,
+            22,
         }}
       >
-        Tomar asistencia
-      </Title>
+        <Title
+          level={2}
+          style={{
+            marginBottom:
+              4,
+          }}
+        >
+          Tomar asistencia
+        </Title>
 
-      <Text
-        type="secondary"
-      >
-        Seleccione una de sus
-        clases y el curso en el
-        que desea registrar la
-        asistencia.
-      </Text>
+        <Text
+          type="secondary"
+        >
+          Seleccione la clase y el
+          curso para iniciar el
+          registro mediante código QR.
+        </Text>
+      </div>
 
       {/* ================================= */}
       {/* CONFIGURACION */}
       {/* ================================= */}
 
       <Card
-        title={
-          <Space>
-            <QrcodeOutlined />
-
-            Configurar asistencia
-          </Space>
-        }
         style={{
-          marginTop:
-            24,
-
           marginBottom:
-            24,
+            22,
         }}
       >
         {clases.length ===
@@ -1961,12 +1901,13 @@ export default function TomarAsistencia() {
                 16,
                 16,
               ]}
+              align="bottom"
             >
               {/* CLASE */}
 
               <Col
                 xs={24}
-                md={12}
+                md={10}
               >
                 <Text strong>
                   Clase
@@ -2021,7 +1962,7 @@ export default function TomarAsistencia() {
 
               <Col
                 xs={24}
-                md={12}
+                md={10}
               >
                 <Text strong>
                   Curso
@@ -2070,59 +2011,56 @@ export default function TomarAsistencia() {
                   }
                 />
               </Col>
+
+              {/* INICIAR */}
+
+              <Col
+                xs={24}
+                md={4}
+              >
+                {!sesionActiva &&
+                  asignacionSeleccionada && (
+                    <Button
+                      type="primary"
+                      block
+                      size="large"
+                      icon={
+                        <CameraOutlined />
+                      }
+                      loading={
+                        iniciando
+                      }
+                      disabled={
+                        cargandoEstudiantes ||
+                        estudiantes.length ===
+                          0
+                      }
+                      onClick={
+                        iniciarAsistencia
+                      }
+                    >
+                      Iniciar
+                    </Button>
+                  )}
+              </Col>
             </Row>
 
-            {/* INFORMACION CLASE */}
+            {/* SOLO MOSTRAR AVISO SI NO
+                HAY ESTUDIANTES */}
 
-            {seccionId && (
-              <div
-                style={{
-                  marginTop:
-                    20,
-                }}
-              >
-                {cargandoEstudiantes ? (
-                  <Spin />
-                ) : (
-                  <Alert
-                    type="info"
-                    showIcon
-                    message={
-                      `${totalEstudiantes} estudiantes activos registrados en esta clase`
-                    }
-                    description="Los estudiantes que no sean escaneados antes de cerrar la sesion se registraran como AUSENTES."
-                  />
-                )}
-              </div>
-            )}
-
-            {/* INICIAR */}
-
-            {!sesionActiva &&
-              asignacionSeleccionada && (
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={
-                    <CameraOutlined />
-                  }
-                  loading={
-                    iniciando
-                  }
-                  disabled={
-                    totalEstudiantes ===
-                    0
-                  }
-                  onClick={
-                    iniciarAsistencia
-                  }
+            {seccionId &&
+              !cargandoEstudiantes &&
+              estudiantes.length ===
+                0 && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="Esta clase no tiene estudiantes activos registrados."
                   style={{
                     marginTop:
-                      20,
+                      16,
                   }}
-                >
-                  Iniciar asistencia
-                </Button>
+                />
               )}
           </>
         )}
@@ -2142,135 +2080,72 @@ export default function TomarAsistencia() {
             message="Asistencia en curso"
             description={
               asignacionSeleccionada
-                ? `${obtenerNombreClase(asignacionSeleccionada)} | ${asignacionSeleccionada.curso}`
-                : 'Sesion de asistencia abierta.'
+                ? `${obtenerNombreClase(
+                    asignacionSeleccionada,
+                  )} · ${
+                    asignacionSeleccionada.curso
+                  }`
+                : 'Sesión de asistencia abierta.'
             }
             style={{
               marginBottom:
-                24,
+                20,
             }}
           />
 
-          {/* CONTADORES */}
-
           <Row
             gutter={[
-              16,
-              16,
-            ]}
-            style={{
-              marginBottom:
-                24,
-            }}
-          >
-            <Col
-              xs={12}
-              md={6}
-            >
-              <Card>
-                <Statistic
-                  title="Total"
-                  value={
-                    totalEstudiantes
-                  }
-                  prefix={
-                    <UserOutlined />
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={12}
-              md={6}
-            >
-              <Card>
-                <Statistic
-                  title="Presentes"
-                  value={
-                    presentes
-                  }
-                  prefix={
-                    <CheckCircleOutlined />
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={12}
-              md={6}
-            >
-              <Card>
-                <Statistic
-                  title="Pendientes"
-                  value={
-                    pendientes
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={12}
-              md={6}
-            >
-              <Card>
-                <Statistic
-                  title="Ausentes"
-                  value={0}
-                  prefix={
-                    <CloseCircleOutlined />
-                  }
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          {/* CAMARA */}
-
-          <Row
-            gutter={[
-              24,
-              24,
+              20,
+              20,
             ]}
           >
+            {/* ========================= */}
+            {/* CAMARA */}
+            {/* ========================= */}
+
             <Col
               xs={24}
-              lg={14}
+              lg={15}
             >
               <Card
                 title={
                   <Space>
                     <CameraOutlined />
 
-                    Camara QR
+                    Cámara QR
                   </Space>
                 }
               >
-                <Alert
-                  type={
-                    camaraLista
-                      ? 'success'
-                      : 'info'
-                  }
-                  showIcon
-                  message={
-                    camaraLista
-                      ? 'Camara lista. Muestre el codigo QR frente al telefono.'
-                      : 'Preparando camara...'
-                  }
-                  style={{
-                    marginBottom:
-                      16,
-                  }}
-                />
+                {camaraLista && (
+                  <Alert
+                    type="success"
+                    showIcon
+                    message="Cámara lista. Muestre el código QR del estudiante."
+                    style={{
+                      marginBottom:
+                        16,
+                    }}
+                  />
+                )}
+
+                {!camaraLista &&
+                  !camaraError && (
+                    <Alert
+                      type="info"
+                      showIcon
+                      message="Preparando cámara..."
+                      style={{
+                        marginBottom:
+                          16,
+                      }}
+                    />
+                  )}
 
                 {camaraError && (
                   <Alert
                     type="error"
                     showIcon
-                    message="No fue posible abrir la camara"
+                    message="No fue posible abrir la cámara"
                     description={
                       camaraError
                     }
@@ -2314,11 +2189,13 @@ export default function TomarAsistencia() {
               </Card>
             </Col>
 
-            {/* INFORMACION */}
+            {/* ========================= */}
+            {/* CONTROLES */}
+            {/* ========================= */}
 
             <Col
               xs={24}
-              lg={10}
+              lg={9}
             >
               <Card
                 title="Control de asistencia"
@@ -2327,7 +2204,7 @@ export default function TomarAsistencia() {
                   <Alert
                     type="success"
                     showIcon
-                    message="Ultimo estudiante registrado"
+                    message="Registrado correctamente"
                     description={
                       ultimoEstudiante
                     }
@@ -2336,37 +2213,30 @@ export default function TomarAsistencia() {
                   <Alert
                     type="info"
                     showIcon
-                    message="Esperando primer codigo QR"
+                    message="Esperando código QR"
                   />
                 )}
 
-                <Alert
-                  type="warning"
-                  showIcon
-                  message="Importante"
-                  description="Cuando cierre la asistencia, todos los estudiantes que permanezcan pendientes seran registrados como AUSENTES."
-                  style={{
-                    marginTop:
-                      20,
-                  }}
-                />
-
                 <Space
                   direction="vertical"
+                  size={12}
                   style={{
                     width:
                       '100%',
 
                     marginTop:
-                      24,
+                      20,
                   }}
                 >
                   <Popconfirm
                     title="Cerrar asistencia"
                     description={
-                      `Hay ${pendientes} estudiantes pendientes. Al cerrar quedaran como AUSENTES. ¿Desea continuar?`
+                      pendientes >
+                      0
+                        ? `Los ${pendientes} estudiantes no escaneados quedarán como AUSENTES. ¿Desea cerrar la asistencia?`
+                        : 'Todos los estudiantes fueron registrados. ¿Desea cerrar la asistencia?'
                     }
-                    okText="Si, cerrar"
+                    okText="Sí, cerrar"
                     cancelText="No"
                     onConfirm={
                       cerrarAsistencia
@@ -2389,9 +2259,9 @@ export default function TomarAsistencia() {
                   </Popconfirm>
 
                   <Popconfirm
-                    title="Cancelar sesion"
-                    description="La sesion se cancelara y no se generaran ausencias. ¿Desea continuar?"
-                    okText="Si, cancelar"
+                    title="Cancelar sesión"
+                    description="La sesión será cancelada. ¿Desea continuar?"
+                    okText="Sí, cancelar"
                     cancelText="No"
                     onConfirm={
                       cancelarAsistencia
@@ -2400,40 +2270,13 @@ export default function TomarAsistencia() {
                     <Button
                       block
                     >
-                      Cancelar sesion
+                      Cancelar sesión
                     </Button>
                   </Popconfirm>
                 </Space>
               </Card>
             </Col>
           </Row>
-
-          {/* LISTADO EN TIEMPO REAL */}
-
-          <Card
-            title="Estudiantes de la clase"
-            style={{
-              marginTop:
-                24,
-            }}
-          >
-            <Table
-              rowKey="estudiante_id"
-              columns={
-                columnas
-              }
-              dataSource={
-                filasEstudiantes
-              }
-              pagination={
-                false
-              }
-              scroll={{
-                x:
-                  700,
-              }}
-            />
-          </Card>
         </>
       )}
 
@@ -2449,124 +2292,61 @@ export default function TomarAsistencia() {
             type="success"
             showIcon
             message="Asistencia finalizada correctamente"
-            description="Los estudiantes escaneados quedaron PRESENTES y los estudiantes no escaneados quedaron AUSENTES."
-            style={{
-              marginBottom:
-                24,
-            }}
+            description={
+              estudiantesAusentes.length >
+              0
+                ? 'A continuación se muestran únicamente los estudiantes que quedaron ausentes.'
+                : 'Todos los estudiantes fueron registrados como presentes.'
+            }
           />
 
-          <Row
-            gutter={[
-              16,
-              16,
-            ]}
-          >
-            <Col
-              xs={12}
-              md={4}
-            >
-              <Card>
-                <Statistic
-                  title="Total"
-                  value={
-                    totalEstudiantes
-                  }
-                />
-              </Card>
-            </Col>
+          {/* ================================= */}
+          {/* SOLO AUSENTES */}
+          {/* ================================= */}
 
-            <Col
-              xs={12}
-              md={4}
-            >
-              <Card>
-                <Statistic
-                  title="Presentes"
-                  value={
-                    presentes
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={12}
-              md={4}
-            >
-              <Card>
-                <Statistic
-                  title="Ausentes"
-                  value={
-                    ausentes
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={12}
-              md={4}
-            >
-              <Card>
-                <Statistic
-                  title="Pendientes"
-                  value={
-                    pendientes
-                  }
-                />
-              </Card>
-            </Col>
-
-            <Col
-              xs={24}
-              md={8}
-            >
-              <Card>
-                <Statistic
-                  title="Porcentaje de asistencia"
-                  value={
-                    totalEstudiantes >
-                    0
-                      ? (
-                          presentes /
-                          totalEstudiantes
-                        ) *
-                        100
-                      : 0
-                  }
-                  precision={1}
-                  suffix="%"
-                />
-              </Card>
-            </Col>
-          </Row>
-
-          <Card
-            title="Resultado final"
-            style={{
-              marginTop:
-                24,
-            }}
-          >
-            <Table
-              rowKey="estudiante_id"
-              columns={
-                columnas
-              }
-              dataSource={
-                filasEstudiantes
-              }
-              pagination={{
-                pageSize:
-                  10,
+          {estudiantesAusentes.length >
+          0 ? (
+            <Card
+              title="Estudiantes ausentes"
+              style={{
+                marginTop:
+                  20,
               }}
-              scroll={{
-                x:
-                  700,
+            >
+              <Table
+                rowKey="estudiante_id"
+                columns={
+                  columnasAusentes
+                }
+                dataSource={
+                  estudiantesAusentes
+                }
+                pagination={
+                  estudiantesAusentes.length >
+                  10
+                    ? {
+                        pageSize:
+                          10,
+                      }
+                    : false
+                }
+                scroll={{
+                  x:
+                    500,
+                }}
+              />
+            </Card>
+          ) : (
+            <Alert
+              type="success"
+              showIcon
+              message="No hubo estudiantes ausentes."
+              style={{
+                marginTop:
+                  20,
               }}
             />
-          </Card>
+          )}
 
           <Button
             type="primary"
