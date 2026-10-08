@@ -84,14 +84,11 @@ textarea {
 
 .ant-btn {
   font-weight: 600;
-
-  box-shadow:
-    none;
+  box-shadow: none;
 }
 
 .ant-btn-primary {
-  box-shadow:
-    none;
+  box-shadow: none;
 }
 
 .ant-card {
@@ -201,7 +198,7 @@ textarea {
 }
 
 /* =====================================
-   LOGIN - LADO INSTITUCIONAL
+   LOGIN - IDENTIDAD
 ===================================== */
 
 .login-presentacion {
@@ -211,20 +208,20 @@ textarea {
   display:
     flex;
 
-  flex-direction:
-    column;
+  align-items:
+    center;
 
   justify-content:
-    space-between;
+    center;
 
   padding:
     52px;
 
-  color:
-    white;
-
   background:
     var(--color-principal);
+
+  color:
+    white;
 }
 
 .login-marca {
@@ -234,16 +231,22 @@ textarea {
   align-items:
     center;
 
+  justify-content:
+    center;
+
   gap:
-    12px;
+    22px;
+
+  width:
+    100%;
 }
 
 .login-marca-icono {
   width:
-    46px;
+    74px;
 
   height:
-    46px;
+    74px;
 
   display:
     flex;
@@ -258,20 +261,40 @@ textarea {
     0;
 
   border:
-    1px solid
-    rgba(255, 255, 255, 0.30);
+    2px solid
+    rgba(255, 255, 255, 0.28);
 
   border-radius:
-    10px;
+    18px;
 
   background:
     rgba(255, 255, 255, 0.10);
 
+  color:
+    white;
+
   font-size:
-    24px;
+    37px;
+}
+
+.login-marca-texto {
+  display:
+    flex;
+
+  flex-direction:
+    column;
+
+  justify-content:
+    center;
+
+  min-width:
+    0;
 }
 
 .login-marca-nombre {
+  display:
+    block;
+
   margin:
     0;
 
@@ -279,10 +302,16 @@ textarea {
     white;
 
   font-size:
-    15px;
+    28px;
 
   font-weight:
     700;
+
+  line-height:
+    1.2;
+
+  white-space:
+    nowrap;
 }
 
 .login-marca-subtitulo {
@@ -290,80 +319,22 @@ textarea {
     block;
 
   margin-top:
-    2px;
-
-  color:
-    rgba(255, 255, 255, 0.72);
-
-  font-size:
-    13px;
-}
-
-.login-presentacion-contenido {
-  max-width:
-    420px;
-}
-
-.login-etiqueta {
-  display:
-    inline-block;
-
-  margin-bottom:
-    14px;
+    8px;
 
   color:
     rgba(255, 255, 255, 0.76);
 
   font-size:
-    13px;
+    18px;
 
   font-weight:
-    600;
-
-  letter-spacing:
-    0.5px;
-
-  text-transform:
-    uppercase;
-}
-
-.login-presentacion-titulo {
-  margin:
-    0 0 16px 0;
-
-  color:
-    white;
-
-  font-size:
-    34px;
+    400;
 
   line-height:
-    1.2;
+    1.3;
 
-  font-weight:
-    700;
-}
-
-.login-presentacion-texto {
-  margin:
-    0;
-
-  color:
-    rgba(255, 255, 255, 0.82);
-
-  font-size:
-    16px;
-
-  line-height:
-    1.65;
-}
-
-.login-presentacion-pie {
-  color:
-    rgba(255, 255, 255, 0.65);
-
-  font-size:
-    13px;
+  white-space:
+    nowrap;
 }
 
 /* =====================================
@@ -400,48 +371,57 @@ textarea {
 
 .login-encabezado {
   margin-bottom:
-    30px;
-}
-
-.login-icono {
-  display:
-    none;
+    28px;
 }
 
 .login-titulo {
-  margin-bottom:
-    8px !important;
+  margin:
+    0 !important;
 
   color:
     var(--color-texto) !important;
 
   font-size:
-    26px !important;
+    28px !important;
+
+  font-weight:
+    700 !important;
 }
 
-.login-descripcion {
-  display:
-    block;
-
-  max-width:
-    340px;
+.login-formulario
+  .ant-form-item-label
+  > label {
+  font-weight:
+    500;
 
   color:
-    var(--color-texto-secundario);
+    var(--color-texto);
+}
 
-  line-height:
-    1.5;
+.login-formulario
+  .ant-input-affix-wrapper {
+  min-height:
+    46px;
+
+  padding-left:
+    14px;
+
+  padding-right:
+    14px;
 }
 
 .login-boton {
   height:
-    44px !important;
+    48px !important;
 
   margin-top:
-    4px;
+    5px;
 
   border-radius:
     8px !important;
+
+  font-size:
+    15px;
 }
 
 /* =====================================
@@ -663,19 +643,14 @@ textarea {
     var(--sombra-suave);
 
   transition:
-    border-color
-    0.18s ease,
-    box-shadow
-    0.18s ease,
-    transform
-    0.18s ease;
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
 }
 
 .dashboard-card:hover {
   transform:
-    translateY(
-      -2px
-    );
+    translateY(-2px);
 
   border-color:
     #c8d6df !important;
@@ -1089,56 +1064,96 @@ textarea {
 }
 
 /* =====================================
-   TABLET
+   TABLET / PANTALLAS MEDIANAS
 ===================================== */
 
 @media (
   max-width:
     850px
 ) {
+  .login-pagina {
+    padding:
+      0;
+
+    background:
+      white;
+  }
+
   .login-contenedor {
     max-width:
-      500px;
+      none;
+
+    min-height:
+      100vh;
 
     grid-template-columns:
       1fr;
 
     grid-template-rows:
-      auto auto;
+      auto 1fr;
+
+    border:
+      none;
+
+    border-radius:
+      0;
+
+    box-shadow:
+      none;
   }
 
   .login-presentacion {
     min-height:
-      auto;
-
-    justify-content:
-      flex-start;
+      240px;
 
     padding:
-      30px;
+      32px 24px;
   }
 
-  .login-presentacion-contenido {
-    margin:
-      34px 0 8px 0;
-
-    max-width:
-      none;
+  .login-marca {
+    gap:
+      18px;
   }
 
-  .login-presentacion-titulo {
+  .login-marca-icono {
+    width:
+      62px;
+
+    height:
+      62px;
+
+    border-radius:
+      14px;
+
     font-size:
-      27px;
+      31px;
   }
 
-  .login-presentacion-pie {
-    display:
-      none;
+  .login-marca-nombre {
+    font-size:
+      24px;
+  }
+
+  .login-marca-subtitulo {
+    margin-top:
+      5px;
+
+    font-size:
+      17px;
   }
 
   .login-formulario {
+    width:
+      100%;
+
+    max-width:
+      600px;
+
+    margin:
+      0 auto;
+
     padding:
-      34px 30px;
+      48px 40px;
   }
 }
 
@@ -1197,11 +1212,8 @@ textarea {
     480px
 ) {
   .login-pagina {
-    display:
-      block;
-
     min-height:
-      100vh;
+      100dvh;
 
     padding:
       0;
@@ -1212,59 +1224,60 @@ textarea {
 
   .login-contenedor {
     display:
-      block;
-
-    width:
-      100%;
-
-    min-height:
-      100vh;
-
-    max-width:
-      none;
-
-    border:
-      none;
-
-    border-radius:
-      0;
-
-    box-shadow:
-      none;
-  }
-
-  /* ===================================
-     BLOQUE AZUL SUPERIOR
-  =================================== */
-
-  .login-presentacion {
-    min-height:
-      320px;
-
-    display:
       flex;
 
     flex-direction:
       column;
 
-    justify-content:
-      center;
+    width:
+      100%;
+
+    min-height:
+      100dvh;
+
+    background:
+      white;
+  }
+
+  /* ===================================
+     CABECERA AZUL
+  =================================== */
+
+  .login-presentacion {
+    width:
+      100%;
+
+    min-height:
+      220px;
+
+    display:
+      flex;
 
     align-items:
       center;
 
-    padding:
-      30px 24px;
-
-    text-align:
+    justify-content:
       center;
-  }
 
-  /* MARCA */
+    padding:
+      28px 20px;
+
+    background:
+      var(--color-principal);
+  }
 
   .login-marca {
     width:
+      auto;
+
+    max-width:
       100%;
+
+    display:
+      flex;
+
+    align-items:
+      center;
 
     justify-content:
       center;
@@ -1273,99 +1286,65 @@ textarea {
       14px;
 
     margin:
-      0 0 38px 0;
+      0;
   }
 
   .login-marca-icono {
     width:
-      48px;
+      54px;
 
     height:
-      48px;
+      54px;
+
+    flex-shrink:
+      0;
 
     border-radius:
-      10px;
+      12px;
 
     font-size:
-      24px;
+      27px;
   }
 
   .login-marca-texto {
+    min-width:
+      0;
+
     text-align:
       left;
   }
 
   .login-marca-nombre {
     font-size:
-      16px;
+      clamp(
+        17px,
+        5vw,
+        21px
+      );
 
     line-height:
-      1.25;
+      1.2;
+
+    white-space:
+      normal;
   }
 
   .login-marca-subtitulo {
     margin-top:
-      3px;
+      5px;
 
     font-size:
-      13px;
-  }
-
-  /* CONTENIDO CENTRAL */
-
-  .login-presentacion-contenido {
-    width:
-      100%;
-
-    max-width:
-      330px;
-
-    margin:
-      0;
-
-    text-align:
-      center;
-  }
-
-  .login-etiqueta {
-    display:
-      block;
-
-    margin:
-      0 0 14px 0;
-
-    font-size:
-      13px;
-
-    letter-spacing:
-      0.8px;
-  }
-
-  .login-presentacion-titulo {
-    display:
-      none;
-  }
-
-  .login-presentacion-texto {
-    margin:
-      0 auto;
-
-    max-width:
-      310px;
-
-    font-size:
-      15px;
+      clamp(
+        13px,
+        4vw,
+        16px
+      );
 
     line-height:
-      1.5;
+      1.25;
 
-    text-align:
-      center;
-  }
-
-  .login-presentacion-pie {
-    display:
-      none;
+    white-space:
+      normal;
   }
 
   /* ===================================
@@ -1373,11 +1352,28 @@ textarea {
   =================================== */
 
   .login-formulario {
+    width:
+      100%;
+
+    max-width:
+      none;
+
     display:
       block;
 
+    flex:
+      1;
+
+    margin:
+      0;
+
     padding:
-      38px 22px 34px 22px;
+      42px 22px 34px 22px;
+  }
+
+  .login-card {
+    width:
+      100%;
   }
 
   .login-encabezado {
@@ -1387,24 +1383,87 @@ textarea {
 
   .login-titulo {
     font-size:
-      27px !important;
-  }
-
-  .login-descripcion {
-    font-size:
-      14px;
+      28px !important;
 
     line-height:
-      1.5;
+      1.2 !important;
+  }
+
+  .login-formulario
+    .ant-form-item {
+    margin-bottom:
+      22px;
+  }
+
+  .login-formulario
+    .ant-input-affix-wrapper {
+    min-height:
+      48px;
   }
 
   .login-boton {
     height:
-      46px !important;
+      50px !important;
+
+    font-size:
+      16px;
   }
 
   .dashboard-pagina {
     padding:
       14px;
+  }
+}
+
+/* =====================================
+   TELEFONOS MUY PEQUEÑOS
+===================================== */
+
+@media (
+  max-width:
+    360px
+) {
+  .login-presentacion {
+    min-height:
+      200px;
+
+    padding:
+      24px 16px;
+  }
+
+  .login-marca {
+    gap:
+      11px;
+  }
+
+  .login-marca-icono {
+    width:
+      48px;
+
+    height:
+      48px;
+
+    font-size:
+      24px;
+  }
+
+  .login-marca-nombre {
+    font-size:
+      17px;
+  }
+
+  .login-marca-subtitulo {
+    font-size:
+      13px;
+  }
+
+  .login-formulario {
+    padding:
+      34px 18px 28px 18px;
+  }
+
+  .login-titulo {
+    font-size:
+      25px !important;
   }
 }

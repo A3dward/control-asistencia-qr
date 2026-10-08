@@ -30,7 +30,6 @@ import {
 
 const {
   Title,
-  Text,
 } = Typography;
 
 interface FormularioLogin {
@@ -172,7 +171,7 @@ export default function Login() {
         className="login-contenedor"
       >
         {/* ================================= */}
-        {/* PRESENTACION */}
+        {/* IDENTIDAD DEL SISTEMA */}
         {/* ================================= */}
 
         <section
@@ -187,7 +186,9 @@ export default function Login() {
               <QrcodeOutlined />
             </div>
 
-            <div>
+            <div
+              className="login-marca-texto"
+            >
               <span
                 className="login-marca-nombre"
               >
@@ -200,36 +201,6 @@ export default function Login() {
                 INEB de Telesecundaria
               </span>
             </div>
-          </div>
-
-          <div
-            className="login-presentacion-contenido"
-          >
-            <span
-              className="login-etiqueta"
-            >
-              Aldea Cabañas
-            </span>
-
-            <h1
-              className="login-presentacion-titulo"
-            >
-              
-            </h1>
-
-            <p
-              className="login-presentacion-texto"
-            >
-             registro de asistencia
-              mediante código QR.
-            </p>
-          </div>
-
-          <div
-            className="login-presentacion-pie"
-          >
-            Nuevo San Carlos,
-            Retalhuleu
           </div>
         </section>
 
@@ -253,14 +224,6 @@ export default function Login() {
               >
                 Iniciar sesión
               </Title>
-
-              <Text
-                className="login-descripcion"
-              >
-                Ingrese sus
-                credenciales para
-                acceder al sistema.
-              </Text>
             </div>
 
             {error && (
