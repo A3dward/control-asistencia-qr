@@ -140,34 +140,22 @@ export default function DocenteDashboard() {
         </div>
 
         {/* ================================= */}
-        {/* ACCION PRINCIPAL */}
+        {/* TOMAR ASISTENCIA */}
         {/* ================================= */}
 
         <Card
           className="dashboard-accion-principal"
         >
-          <span
-            className="dashboard-accion-etiqueta"
-          >
-            Acción principal
-          </span>
-
           <Title
             level={3}
             className="dashboard-accion-titulo"
+            style={{
+              marginBottom:
+                0,
+            }}
           >
             Tomar asistencia
           </Title>
-
-          <Text
-            className="dashboard-accion-texto"
-          >
-            Seleccione su clase y
-            curso, abra la cámara y
-            registre la asistencia de
-            los estudiantes mediante
-            su código QR.
-          </Text>
 
           <Button
             size="large"
@@ -175,6 +163,10 @@ export default function DocenteDashboard() {
               <QrcodeOutlined />
             }
             className="dashboard-accion-boton"
+            style={{
+              marginTop:
+                16,
+            }}
             onClick={() =>
               navigate(
                 '/docente/asistencia',
@@ -201,14 +193,6 @@ export default function DocenteDashboard() {
             >
               Herramientas
             </Title>
-
-            <Text
-              className="dashboard-seccion-texto"
-            >
-              Acceda a la información
-              que necesita para
-              trabajar con sus clases.
-            </Text>
           </div>
 
           <Row
@@ -217,7 +201,9 @@ export default function DocenteDashboard() {
               16,
             ]}
           >
+            {/* ================================= */}
             {/* MIS CLASES */}
+            {/* ================================= */}
 
             <Col
               xs={24}
@@ -264,7 +250,9 @@ export default function DocenteDashboard() {
               </Card>
             </Col>
 
+            {/* ================================= */}
             {/* ESTUDIANTES */}
+            {/* ================================= */}
 
             <Col
               xs={24}
@@ -311,7 +299,9 @@ export default function DocenteDashboard() {
               </Card>
             </Col>
 
+            {/* ================================= */}
             {/* HISTORIAL */}
+            {/* ================================= */}
 
             <Col
               xs={24}
